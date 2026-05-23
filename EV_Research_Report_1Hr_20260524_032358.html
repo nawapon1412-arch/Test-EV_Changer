@@ -1,0 +1,1662 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Charging Research Report - 1 Hour</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 30px 40px;
+    border-bottom: 3px solid #00d4ff;
+  }
+  .header h1 {
+    font-size: 28px;
+    color: #00d4ff;
+    margin-bottom: 5px;
+  }
+  .header .subtitle {
+    font-size: 14px;
+    color: #8892b0;
+  }
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 30px 20px;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 30px;
+  }
+  .stat-card {
+    background: linear-gradient(145deg, #1a1a2e, #16213e);
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .stat-card:hover {
+    transform: translateY(-3px);
+    border-color: #00d4ff;
+  }
+  .stat-card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #8892b0;
+    margin-bottom: 8px;
+  }
+  .stat-card .value {
+    font-size: 26px;
+    font-weight: 700;
+    color: #00d4ff;
+  }
+  .stat-card .unit {
+    font-size: 13px;
+    color: #8892b0;
+    margin-top: 2px;
+  }
+  .chart-section {
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+  }
+  .chart-section h2 {
+    font-size: 18px;
+    color: #ccd6f6;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2a4a;
+  }
+  .chart-wrapper {
+    position: relative;
+    height: 380px;
+  }
+  .chart-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+  }
+  .phase-bar {
+    display: flex;
+    justify-content: space-around;
+    background: #16213e;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 25px;
+  }
+  .phase-item {
+    text-align: center;
+    padding: 10px 20px;
+    border-radius: 8px;
+  }
+  .phase-item .phase-label {
+    font-size: 11px;
+    color: #8892b0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .phase-item .phase-value {
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 4px;
+  }
+  .phase-ramp { color: #ffd93d; }
+  .phase-cc { color: #6bcb77; }
+  .phase-cv { color: #4d96ff; }
+  .phase-taper { color: #ff6b6b; }
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 10px;
+  }
+  table.data-table th {
+    background: #16213e;
+    color: #00d4ff;
+    padding: 10px 8px;
+    text-align: center;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+  }
+  table.data-table td {
+    padding: 6px 8px;
+    text-align: center;
+    border-bottom: 1px solid #2a2a4a;
+    color: #ccd6f6;
+  }
+  table.data-table tr:hover td {
+    background: #16213e;
+  }
+  .table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid #2a2a4a;
+  }
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-mock {
+    background: #ff6b6b22;
+    color: #ff6b6b;
+    border: 1px solid #ff6b6b44;
+  }
+  .footer {
+    text-align: center;
+    padding: 20px;
+    color: #555;
+    font-size: 12px;
+  }
+  @media (max-width: 768px) {
+    .chart-row { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>EV Charging Research Report</h1>
+  <div class="subtitle">
+    1-Hour Charging Profile Analysis &nbsp;
+    <span class="badge badge-mock">MOCK DATA</span>
+    &nbsp;|&nbsp; Generated: 24/05/2026 03:23:58
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Total Energy</div>
+      <div class="value">2.7615</div>
+      <div class="unit">kWh</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Peak Power</div>
+      <div class="value">3.278</div>
+      <div class="unit">kW</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Average Power</div>
+      <div class="value">2.762</div>
+      <div class="unit">kW</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Peak Temperature</div>
+      <div class="value">59.8°C</div>
+      <div class="unit">Rise: +27.8°C</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Average Voltage</div>
+      <div class="value">217.4</div>
+      <div class="unit">V</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Average Current</div>
+      <div class="value">12.71</div>
+      <div class="unit">A</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Peak Current</div>
+      <div class="value">15.04</div>
+      <div class="unit">A</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Duration</div>
+      <div class="value">60</div>
+      <div class="unit">minutes (3600 samples)</div>
+    </div>
+  </div>
+
+  <div class="phase-bar">
+    <div class="phase-item">
+      <div class="phase-label">Phase 1: Ramp Up</div>
+      <div class="phase-value phase-ramp">0 - 5 min</div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-label">Phase 2: CC (Const Current)</div>
+      <div class="phase-value phase-cc">5 - 45 min</div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-label">Phase 3: CV Transition</div>
+      <div class="phase-value phase-cv">45 - 50 min</div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-label">Phase 4: Taper Off</div>
+      <div class="phase-value phase-taper">50 - 60 min</div>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <h2>Power & Temperature Profile</h2>
+    <div class="chart-wrapper"><canvas id="chartPowerTemp"></canvas></div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-section">
+      <h2>Voltage Profile</h2>
+      <div class="chart-wrapper"><canvas id="chartVoltage"></canvas></div>
+    </div>
+    <div class="chart-section">
+      <h2>Current Profile</h2>
+      <div class="chart-wrapper"><canvas id="chartCurrent"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-section">
+      <h2>Cumulative Energy (kWh)</h2>
+      <div class="chart-wrapper"><canvas id="chartEnergy"></canvas></div>
+    </div>
+    <div class="chart-section">
+      <h2>Resistance Profile (Ohm)</h2>
+      <div class="chart-wrapper"><canvas id="chartResistance"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-section">
+    <h2>Data Log (Sampled every 30s)</h2>
+    <div class="table-container">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Time (min)</th>
+            <th>Voltage (V)</th>
+            <th>Current (A)</th>
+            <th>Resistance (&#8486;)</th>
+            <th>Power (kW)</th>
+            <th>Temp (&#176;C)</th>
+            <th>Temp Rise (&#176;C)</th>
+            <th>Energy (kWh)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>0.00</td>
+            <td>219.7</td>
+            <td>0.0</td>
+            <td>0.0</td>
+            <td>0.000</td>
+            <td>32.0</td>
+            <td>+0.0</td>
+            <td>0.0000</td>
+          </tr>
+          <tr>
+            <td>0.50</td>
+            <td>217.9</td>
+            <td>1.1</td>
+            <td>198.09</td>
+            <td>0.240</td>
+            <td>33.0</td>
+            <td>+1.0</td>
+            <td>0.0011</td>
+          </tr>
+          <tr>
+            <td>1.00</td>
+            <td>220.5</td>
+            <td>2.0</td>
+            <td>110.25</td>
+            <td>0.441</td>
+            <td>33.6</td>
+            <td>+1.6</td>
+            <td>0.0041</td>
+          </tr>
+          <tr>
+            <td>1.50</td>
+            <td>218.0</td>
+            <td>3.25</td>
+            <td>67.08</td>
+            <td>0.709</td>
+            <td>35.6</td>
+            <td>+3.6</td>
+            <td>0.0091</td>
+          </tr>
+          <tr>
+            <td>2.00</td>
+            <td>219.2</td>
+            <td>4.34</td>
+            <td>50.51</td>
+            <td>0.951</td>
+            <td>37.3</td>
+            <td>+5.3</td>
+            <td>0.0161</td>
+          </tr>
+          <tr>
+            <td>2.50</td>
+            <td>220.0</td>
+            <td>6.25</td>
+            <td>35.2</td>
+            <td>1.375</td>
+            <td>40.0</td>
+            <td>+8.0</td>
+            <td>0.0257</td>
+          </tr>
+          <tr>
+            <td>3.00</td>
+            <td>220.5</td>
+            <td>8.06</td>
+            <td>27.36</td>
+            <td>1.777</td>
+            <td>43.8</td>
+            <td>+11.8</td>
+            <td>0.0382</td>
+          </tr>
+          <tr>
+            <td>3.50</td>
+            <td>220.0</td>
+            <td>9.3</td>
+            <td>23.66</td>
+            <td>2.046</td>
+            <td>46.6</td>
+            <td>+14.6</td>
+            <td>0.0539</td>
+          </tr>
+          <tr>
+            <td>4.00</td>
+            <td>215.9</td>
+            <td>11.02</td>
+            <td>19.59</td>
+            <td>2.379</td>
+            <td>50.8</td>
+            <td>+18.8</td>
+            <td>0.0726</td>
+          </tr>
+          <tr>
+            <td>4.50</td>
+            <td>217.7</td>
+            <td>12.71</td>
+            <td>17.13</td>
+            <td>2.767</td>
+            <td>54.0</td>
+            <td>+22.0</td>
+            <td>0.0944</td>
+          </tr>
+          <tr>
+            <td>5.00</td>
+            <td>216.1</td>
+            <td>14.56</td>
+            <td>14.84</td>
+            <td>3.146</td>
+            <td>57.6</td>
+            <td>+25.6</td>
+            <td>0.1191</td>
+          </tr>
+          <tr>
+            <td>5.50</td>
+            <td>214.3</td>
+            <td>14.66</td>
+            <td>14.62</td>
+            <td>3.142</td>
+            <td>58.3</td>
+            <td>+26.3</td>
+            <td>0.1453</td>
+          </tr>
+          <tr>
+            <td>6.00</td>
+            <td>219.3</td>
+            <td>14.62</td>
+            <td>15.0</td>
+            <td>3.206</td>
+            <td>57.7</td>
+            <td>+25.7</td>
+            <td>0.1716</td>
+          </tr>
+          <tr>
+            <td>6.50</td>
+            <td>216.3</td>
+            <td>14.3</td>
+            <td>15.13</td>
+            <td>3.093</td>
+            <td>58.4</td>
+            <td>+26.4</td>
+            <td>0.1977</td>
+          </tr>
+          <tr>
+            <td>7.00</td>
+            <td>216.9</td>
+            <td>14.25</td>
+            <td>15.22</td>
+            <td>3.091</td>
+            <td>58.1</td>
+            <td>+26.1</td>
+            <td>0.2238</td>
+          </tr>
+          <tr>
+            <td>7.50</td>
+            <td>216.6</td>
+            <td>14.29</td>
+            <td>15.16</td>
+            <td>3.095</td>
+            <td>58.7</td>
+            <td>+26.7</td>
+            <td>0.2500</td>
+          </tr>
+          <tr>
+            <td>8.00</td>
+            <td>215.5</td>
+            <td>14.56</td>
+            <td>14.8</td>
+            <td>3.138</td>
+            <td>58.1</td>
+            <td>+26.1</td>
+            <td>0.2763</td>
+          </tr>
+          <tr>
+            <td>8.50</td>
+            <td>215.2</td>
+            <td>14.26</td>
+            <td>15.09</td>
+            <td>3.069</td>
+            <td>58.7</td>
+            <td>+26.7</td>
+            <td>0.3025</td>
+          </tr>
+          <tr>
+            <td>9.00</td>
+            <td>218.0</td>
+            <td>14.65</td>
+            <td>14.88</td>
+            <td>3.194</td>
+            <td>58.8</td>
+            <td>+26.8</td>
+            <td>0.3287</td>
+          </tr>
+          <tr>
+            <td>9.50</td>
+            <td>218.5</td>
+            <td>14.51</td>
+            <td>15.06</td>
+            <td>3.170</td>
+            <td>58.7</td>
+            <td>+26.7</td>
+            <td>0.3550</td>
+          </tr>
+          <tr>
+            <td>10.00</td>
+            <td>214.8</td>
+            <td>14.59</td>
+            <td>14.72</td>
+            <td>3.134</td>
+            <td>58.6</td>
+            <td>+26.6</td>
+            <td>0.3811</td>
+          </tr>
+          <tr>
+            <td>10.50</td>
+            <td>217.6</td>
+            <td>14.29</td>
+            <td>15.23</td>
+            <td>3.110</td>
+            <td>58.7</td>
+            <td>+26.7</td>
+            <td>0.4074</td>
+          </tr>
+          <tr>
+            <td>11.00</td>
+            <td>217.1</td>
+            <td>14.55</td>
+            <td>14.92</td>
+            <td>3.159</td>
+            <td>58.9</td>
+            <td>+26.9</td>
+            <td>0.4336</td>
+          </tr>
+          <tr>
+            <td>11.50</td>
+            <td>216.8</td>
+            <td>14.39</td>
+            <td>15.07</td>
+            <td>3.120</td>
+            <td>58.7</td>
+            <td>+26.7</td>
+            <td>0.4599</td>
+          </tr>
+          <tr>
+            <td>12.00</td>
+            <td>218.2</td>
+            <td>14.56</td>
+            <td>14.99</td>
+            <td>3.177</td>
+            <td>59.0</td>
+            <td>+27.0</td>
+            <td>0.4861</td>
+          </tr>
+          <tr>
+            <td>12.50</td>
+            <td>215.4</td>
+            <td>14.64</td>
+            <td>14.71</td>
+            <td>3.154</td>
+            <td>58.8</td>
+            <td>+26.8</td>
+            <td>0.5124</td>
+          </tr>
+          <tr>
+            <td>13.00</td>
+            <td>216.7</td>
+            <td>14.44</td>
+            <td>15.01</td>
+            <td>3.129</td>
+            <td>58.8</td>
+            <td>+26.8</td>
+            <td>0.5385</td>
+          </tr>
+          <tr>
+            <td>13.50</td>
+            <td>216.2</td>
+            <td>14.6</td>
+            <td>14.81</td>
+            <td>3.156</td>
+            <td>59.3</td>
+            <td>+27.3</td>
+            <td>0.5647</td>
+          </tr>
+          <tr>
+            <td>14.00</td>
+            <td>215.0</td>
+            <td>14.48</td>
+            <td>14.85</td>
+            <td>3.113</td>
+            <td>59.1</td>
+            <td>+27.1</td>
+            <td>0.5910</td>
+          </tr>
+          <tr>
+            <td>14.50</td>
+            <td>216.7</td>
+            <td>14.27</td>
+            <td>15.19</td>
+            <td>3.092</td>
+            <td>59.4</td>
+            <td>+27.4</td>
+            <td>0.6172</td>
+          </tr>
+          <tr>
+            <td>15.00</td>
+            <td>216.3</td>
+            <td>14.43</td>
+            <td>14.99</td>
+            <td>3.121</td>
+            <td>58.8</td>
+            <td>+26.8</td>
+            <td>0.6433</td>
+          </tr>
+          <tr>
+            <td>15.50</td>
+            <td>220.0</td>
+            <td>14.36</td>
+            <td>15.32</td>
+            <td>3.159</td>
+            <td>59.3</td>
+            <td>+27.3</td>
+            <td>0.6695</td>
+          </tr>
+          <tr>
+            <td>16.00</td>
+            <td>216.4</td>
+            <td>14.37</td>
+            <td>15.06</td>
+            <td>3.110</td>
+            <td>58.9</td>
+            <td>+26.9</td>
+            <td>0.6957</td>
+          </tr>
+          <tr>
+            <td>16.50</td>
+            <td>217.4</td>
+            <td>14.61</td>
+            <td>14.88</td>
+            <td>3.176</td>
+            <td>59.3</td>
+            <td>+27.3</td>
+            <td>0.7219</td>
+          </tr>
+          <tr>
+            <td>17.00</td>
+            <td>219.9</td>
+            <td>14.18</td>
+            <td>15.51</td>
+            <td>3.118</td>
+            <td>58.7</td>
+            <td>+26.7</td>
+            <td>0.7481</td>
+          </tr>
+          <tr>
+            <td>17.50</td>
+            <td>217.0</td>
+            <td>14.35</td>
+            <td>15.12</td>
+            <td>3.114</td>
+            <td>58.9</td>
+            <td>+26.9</td>
+            <td>0.7744</td>
+          </tr>
+          <tr>
+            <td>18.00</td>
+            <td>219.1</td>
+            <td>14.46</td>
+            <td>15.15</td>
+            <td>3.168</td>
+            <td>59.3</td>
+            <td>+27.3</td>
+            <td>0.8006</td>
+          </tr>
+          <tr>
+            <td>18.50</td>
+            <td>220.0</td>
+            <td>14.6</td>
+            <td>15.07</td>
+            <td>3.212</td>
+            <td>59.1</td>
+            <td>+27.1</td>
+            <td>0.8268</td>
+          </tr>
+          <tr>
+            <td>19.00</td>
+            <td>215.4</td>
+            <td>14.5</td>
+            <td>14.86</td>
+            <td>3.123</td>
+            <td>59.2</td>
+            <td>+27.2</td>
+            <td>0.8530</td>
+          </tr>
+          <tr>
+            <td>19.50</td>
+            <td>216.7</td>
+            <td>14.56</td>
+            <td>14.88</td>
+            <td>3.155</td>
+            <td>58.7</td>
+            <td>+26.7</td>
+            <td>0.8793</td>
+          </tr>
+          <tr>
+            <td>20.00</td>
+            <td>215.7</td>
+            <td>14.16</td>
+            <td>15.23</td>
+            <td>3.054</td>
+            <td>59.0</td>
+            <td>+27.0</td>
+            <td>0.9055</td>
+          </tr>
+          <tr>
+            <td>20.50</td>
+            <td>219.4</td>
+            <td>14.68</td>
+            <td>14.95</td>
+            <td>3.221</td>
+            <td>59.0</td>
+            <td>+27.0</td>
+            <td>0.9317</td>
+          </tr>
+          <tr>
+            <td>21.00</td>
+            <td>217.2</td>
+            <td>14.29</td>
+            <td>15.2</td>
+            <td>3.104</td>
+            <td>59.0</td>
+            <td>+27.0</td>
+            <td>0.9578</td>
+          </tr>
+          <tr>
+            <td>21.50</td>
+            <td>217.3</td>
+            <td>14.34</td>
+            <td>15.15</td>
+            <td>3.116</td>
+            <td>58.5</td>
+            <td>+26.5</td>
+            <td>0.9840</td>
+          </tr>
+          <tr>
+            <td>22.00</td>
+            <td>217.0</td>
+            <td>14.56</td>
+            <td>14.9</td>
+            <td>3.159</td>
+            <td>58.4</td>
+            <td>+26.4</td>
+            <td>1.0102</td>
+          </tr>
+          <tr>
+            <td>22.50</td>
+            <td>216.6</td>
+            <td>14.48</td>
+            <td>14.96</td>
+            <td>3.136</td>
+            <td>58.9</td>
+            <td>+26.9</td>
+            <td>1.0365</td>
+          </tr>
+          <tr>
+            <td>23.00</td>
+            <td>217.6</td>
+            <td>14.43</td>
+            <td>15.08</td>
+            <td>3.140</td>
+            <td>58.3</td>
+            <td>+26.3</td>
+            <td>1.0627</td>
+          </tr>
+          <tr>
+            <td>23.50</td>
+            <td>217.1</td>
+            <td>14.41</td>
+            <td>15.07</td>
+            <td>3.128</td>
+            <td>58.4</td>
+            <td>+26.4</td>
+            <td>1.0889</td>
+          </tr>
+          <tr>
+            <td>24.00</td>
+            <td>218.5</td>
+            <td>14.77</td>
+            <td>14.79</td>
+            <td>3.227</td>
+            <td>58.3</td>
+            <td>+26.3</td>
+            <td>1.1152</td>
+          </tr>
+          <tr>
+            <td>24.50</td>
+            <td>212.9</td>
+            <td>14.47</td>
+            <td>14.71</td>
+            <td>3.081</td>
+            <td>58.0</td>
+            <td>+26.0</td>
+            <td>1.1414</td>
+          </tr>
+          <tr>
+            <td>25.00</td>
+            <td>218.6</td>
+            <td>14.21</td>
+            <td>15.38</td>
+            <td>3.106</td>
+            <td>58.0</td>
+            <td>+26.0</td>
+            <td>1.1675</td>
+          </tr>
+          <tr>
+            <td>25.50</td>
+            <td>215.2</td>
+            <td>14.45</td>
+            <td>14.89</td>
+            <td>3.110</td>
+            <td>58.4</td>
+            <td>+26.4</td>
+            <td>1.1938</td>
+          </tr>
+          <tr>
+            <td>26.00</td>
+            <td>218.1</td>
+            <td>14.41</td>
+            <td>15.14</td>
+            <td>3.143</td>
+            <td>57.9</td>
+            <td>+25.9</td>
+            <td>1.2199</td>
+          </tr>
+          <tr>
+            <td>26.50</td>
+            <td>217.8</td>
+            <td>14.38</td>
+            <td>15.15</td>
+            <td>3.132</td>
+            <td>57.9</td>
+            <td>+25.9</td>
+            <td>1.2462</td>
+          </tr>
+          <tr>
+            <td>27.00</td>
+            <td>219.8</td>
+            <td>14.63</td>
+            <td>15.02</td>
+            <td>3.216</td>
+            <td>58.4</td>
+            <td>+26.4</td>
+            <td>1.2724</td>
+          </tr>
+          <tr>
+            <td>27.50</td>
+            <td>214.5</td>
+            <td>14.67</td>
+            <td>14.62</td>
+            <td>3.147</td>
+            <td>57.9</td>
+            <td>+25.9</td>
+            <td>1.2986</td>
+          </tr>
+          <tr>
+            <td>28.00</td>
+            <td>218.9</td>
+            <td>14.44</td>
+            <td>15.16</td>
+            <td>3.161</td>
+            <td>57.2</td>
+            <td>+25.2</td>
+            <td>1.3249</td>
+          </tr>
+          <tr>
+            <td>28.50</td>
+            <td>217.1</td>
+            <td>14.53</td>
+            <td>14.94</td>
+            <td>3.155</td>
+            <td>57.8</td>
+            <td>+25.8</td>
+            <td>1.3509</td>
+          </tr>
+          <tr>
+            <td>29.00</td>
+            <td>217.6</td>
+            <td>14.49</td>
+            <td>15.02</td>
+            <td>3.153</td>
+            <td>57.1</td>
+            <td>+25.1</td>
+            <td>1.3772</td>
+          </tr>
+          <tr>
+            <td>29.50</td>
+            <td>216.0</td>
+            <td>14.13</td>
+            <td>15.29</td>
+            <td>3.052</td>
+            <td>57.8</td>
+            <td>+25.8</td>
+            <td>1.4034</td>
+          </tr>
+          <tr>
+            <td>30.00</td>
+            <td>216.7</td>
+            <td>14.63</td>
+            <td>14.81</td>
+            <td>3.170</td>
+            <td>57.2</td>
+            <td>+25.2</td>
+            <td>1.4296</td>
+          </tr>
+          <tr>
+            <td>30.50</td>
+            <td>218.0</td>
+            <td>14.44</td>
+            <td>15.1</td>
+            <td>3.148</td>
+            <td>57.4</td>
+            <td>+25.4</td>
+            <td>1.4558</td>
+          </tr>
+          <tr>
+            <td>31.00</td>
+            <td>217.9</td>
+            <td>14.53</td>
+            <td>15.0</td>
+            <td>3.166</td>
+            <td>57.4</td>
+            <td>+25.4</td>
+            <td>1.4821</td>
+          </tr>
+          <tr>
+            <td>31.50</td>
+            <td>215.5</td>
+            <td>14.53</td>
+            <td>14.83</td>
+            <td>3.131</td>
+            <td>56.7</td>
+            <td>+24.7</td>
+            <td>1.5083</td>
+          </tr>
+          <tr>
+            <td>32.00</td>
+            <td>218.8</td>
+            <td>14.58</td>
+            <td>15.01</td>
+            <td>3.190</td>
+            <td>56.3</td>
+            <td>+24.3</td>
+            <td>1.5345</td>
+          </tr>
+          <tr>
+            <td>32.50</td>
+            <td>214.9</td>
+            <td>14.43</td>
+            <td>14.89</td>
+            <td>3.101</td>
+            <td>57.2</td>
+            <td>+25.2</td>
+            <td>1.5607</td>
+          </tr>
+          <tr>
+            <td>33.00</td>
+            <td>217.2</td>
+            <td>14.46</td>
+            <td>15.02</td>
+            <td>3.141</td>
+            <td>56.9</td>
+            <td>+24.9</td>
+            <td>1.5869</td>
+          </tr>
+          <tr>
+            <td>33.50</td>
+            <td>218.0</td>
+            <td>14.63</td>
+            <td>14.9</td>
+            <td>3.189</td>
+            <td>56.4</td>
+            <td>+24.4</td>
+            <td>1.6131</td>
+          </tr>
+          <tr>
+            <td>34.00</td>
+            <td>216.5</td>
+            <td>14.43</td>
+            <td>15.0</td>
+            <td>3.124</td>
+            <td>56.2</td>
+            <td>+24.2</td>
+            <td>1.6393</td>
+          </tr>
+          <tr>
+            <td>34.50</td>
+            <td>215.4</td>
+            <td>14.57</td>
+            <td>14.78</td>
+            <td>3.138</td>
+            <td>56.0</td>
+            <td>+24.0</td>
+            <td>1.6657</td>
+          </tr>
+          <tr>
+            <td>35.00</td>
+            <td>217.6</td>
+            <td>14.54</td>
+            <td>14.97</td>
+            <td>3.164</td>
+            <td>55.9</td>
+            <td>+23.9</td>
+            <td>1.6919</td>
+          </tr>
+          <tr>
+            <td>35.50</td>
+            <td>219.3</td>
+            <td>14.31</td>
+            <td>15.32</td>
+            <td>3.138</td>
+            <td>56.3</td>
+            <td>+24.3</td>
+            <td>1.7181</td>
+          </tr>
+          <tr>
+            <td>36.00</td>
+            <td>219.3</td>
+            <td>14.57</td>
+            <td>15.05</td>
+            <td>3.195</td>
+            <td>56.3</td>
+            <td>+24.3</td>
+            <td>1.7444</td>
+          </tr>
+          <tr>
+            <td>36.50</td>
+            <td>216.9</td>
+            <td>14.57</td>
+            <td>14.89</td>
+            <td>3.160</td>
+            <td>55.5</td>
+            <td>+23.5</td>
+            <td>1.7705</td>
+          </tr>
+          <tr>
+            <td>37.00</td>
+            <td>215.6</td>
+            <td>14.15</td>
+            <td>15.24</td>
+            <td>3.051</td>
+            <td>56.0</td>
+            <td>+24.0</td>
+            <td>1.7967</td>
+          </tr>
+          <tr>
+            <td>37.50</td>
+            <td>215.5</td>
+            <td>14.25</td>
+            <td>15.12</td>
+            <td>3.071</td>
+            <td>55.8</td>
+            <td>+23.8</td>
+            <td>1.8229</td>
+          </tr>
+          <tr>
+            <td>38.00</td>
+            <td>216.5</td>
+            <td>14.46</td>
+            <td>14.97</td>
+            <td>3.131</td>
+            <td>56.1</td>
+            <td>+24.1</td>
+            <td>1.8491</td>
+          </tr>
+          <tr>
+            <td>38.50</td>
+            <td>220.0</td>
+            <td>14.44</td>
+            <td>15.24</td>
+            <td>3.177</td>
+            <td>55.6</td>
+            <td>+23.6</td>
+            <td>1.8755</td>
+          </tr>
+          <tr>
+            <td>39.00</td>
+            <td>216.6</td>
+            <td>14.63</td>
+            <td>14.81</td>
+            <td>3.169</td>
+            <td>55.4</td>
+            <td>+23.4</td>
+            <td>1.9017</td>
+          </tr>
+          <tr>
+            <td>39.50</td>
+            <td>216.2</td>
+            <td>14.62</td>
+            <td>14.79</td>
+            <td>3.161</td>
+            <td>56.3</td>
+            <td>+24.3</td>
+            <td>1.9279</td>
+          </tr>
+          <tr>
+            <td>40.00</td>
+            <td>215.6</td>
+            <td>14.3</td>
+            <td>15.08</td>
+            <td>3.083</td>
+            <td>55.8</td>
+            <td>+23.8</td>
+            <td>1.9541</td>
+          </tr>
+          <tr>
+            <td>40.50</td>
+            <td>221.9</td>
+            <td>14.44</td>
+            <td>15.37</td>
+            <td>3.204</td>
+            <td>55.6</td>
+            <td>+23.6</td>
+            <td>1.9803</td>
+          </tr>
+          <tr>
+            <td>41.00</td>
+            <td>217.1</td>
+            <td>14.28</td>
+            <td>15.2</td>
+            <td>3.100</td>
+            <td>55.0</td>
+            <td>+23.0</td>
+            <td>2.0065</td>
+          </tr>
+          <tr>
+            <td>41.50</td>
+            <td>218.2</td>
+            <td>14.73</td>
+            <td>14.81</td>
+            <td>3.214</td>
+            <td>55.3</td>
+            <td>+23.3</td>
+            <td>2.0327</td>
+          </tr>
+          <tr>
+            <td>42.00</td>
+            <td>215.3</td>
+            <td>14.44</td>
+            <td>14.91</td>
+            <td>3.109</td>
+            <td>55.9</td>
+            <td>+23.9</td>
+            <td>2.0589</td>
+          </tr>
+          <tr>
+            <td>42.50</td>
+            <td>218.2</td>
+            <td>14.49</td>
+            <td>15.06</td>
+            <td>3.162</td>
+            <td>55.0</td>
+            <td>+23.0</td>
+            <td>2.0852</td>
+          </tr>
+          <tr>
+            <td>43.00</td>
+            <td>215.1</td>
+            <td>14.76</td>
+            <td>14.57</td>
+            <td>3.175</td>
+            <td>54.8</td>
+            <td>+22.8</td>
+            <td>2.1115</td>
+          </tr>
+          <tr>
+            <td>43.50</td>
+            <td>218.0</td>
+            <td>14.48</td>
+            <td>15.06</td>
+            <td>3.157</td>
+            <td>55.7</td>
+            <td>+23.7</td>
+            <td>2.1377</td>
+          </tr>
+          <tr>
+            <td>44.00</td>
+            <td>216.5</td>
+            <td>14.43</td>
+            <td>15.0</td>
+            <td>3.124</td>
+            <td>55.0</td>
+            <td>+23.0</td>
+            <td>2.1639</td>
+          </tr>
+          <tr>
+            <td>44.50</td>
+            <td>216.7</td>
+            <td>14.37</td>
+            <td>15.08</td>
+            <td>3.114</td>
+            <td>55.4</td>
+            <td>+23.4</td>
+            <td>2.1901</td>
+          </tr>
+          <tr>
+            <td>45.00</td>
+            <td>216.4</td>
+            <td>14.55</td>
+            <td>14.87</td>
+            <td>3.149</td>
+            <td>54.5</td>
+            <td>+22.5</td>
+            <td>2.2164</td>
+          </tr>
+          <tr>
+            <td>45.50</td>
+            <td>218.6</td>
+            <td>14.22</td>
+            <td>15.37</td>
+            <td>3.108</td>
+            <td>54.6</td>
+            <td>+22.6</td>
+            <td>2.2423</td>
+          </tr>
+          <tr>
+            <td>46.00</td>
+            <td>219.2</td>
+            <td>14.05</td>
+            <td>15.6</td>
+            <td>3.080</td>
+            <td>53.6</td>
+            <td>+21.6</td>
+            <td>2.2679</td>
+          </tr>
+          <tr>
+            <td>46.50</td>
+            <td>218.5</td>
+            <td>13.75</td>
+            <td>15.89</td>
+            <td>3.004</td>
+            <td>53.1</td>
+            <td>+21.1</td>
+            <td>2.2931</td>
+          </tr>
+          <tr>
+            <td>47.00</td>
+            <td>214.5</td>
+            <td>13.5</td>
+            <td>15.89</td>
+            <td>2.896</td>
+            <td>53.7</td>
+            <td>+21.7</td>
+            <td>2.3180</td>
+          </tr>
+          <tr>
+            <td>47.50</td>
+            <td>216.8</td>
+            <td>13.31</td>
+            <td>16.29</td>
+            <td>2.886</td>
+            <td>52.6</td>
+            <td>+20.6</td>
+            <td>2.3425</td>
+          </tr>
+          <tr>
+            <td>48.00</td>
+            <td>218.7</td>
+            <td>13.15</td>
+            <td>16.63</td>
+            <td>2.876</td>
+            <td>51.9</td>
+            <td>+19.9</td>
+            <td>2.3667</td>
+          </tr>
+          <tr>
+            <td>48.50</td>
+            <td>217.9</td>
+            <td>12.76</td>
+            <td>17.08</td>
+            <td>2.780</td>
+            <td>51.7</td>
+            <td>+19.7</td>
+            <td>2.3903</td>
+          </tr>
+          <tr>
+            <td>49.00</td>
+            <td>219.8</td>
+            <td>13.13</td>
+            <td>16.74</td>
+            <td>2.886</td>
+            <td>51.5</td>
+            <td>+19.5</td>
+            <td>2.4136</td>
+          </tr>
+          <tr>
+            <td>49.50</td>
+            <td>215.5</td>
+            <td>12.33</td>
+            <td>17.48</td>
+            <td>2.657</td>
+            <td>50.8</td>
+            <td>+18.8</td>
+            <td>2.4365</td>
+          </tr>
+          <tr>
+            <td>50.00</td>
+            <td>216.6</td>
+            <td>12.45</td>
+            <td>17.4</td>
+            <td>2.697</td>
+            <td>49.9</td>
+            <td>+17.9</td>
+            <td>2.4591</td>
+          </tr>
+          <tr>
+            <td>50.50</td>
+            <td>216.0</td>
+            <td>13.92</td>
+            <td>15.52</td>
+            <td>3.007</td>
+            <td>53.3</td>
+            <td>+21.3</td>
+            <td>2.4847</td>
+          </tr>
+          <tr>
+            <td>51.00</td>
+            <td>218.2</td>
+            <td>13.31</td>
+            <td>16.39</td>
+            <td>2.904</td>
+            <td>52.1</td>
+            <td>+20.1</td>
+            <td>2.5092</td>
+          </tr>
+          <tr>
+            <td>51.50</td>
+            <td>217.6</td>
+            <td>12.73</td>
+            <td>17.09</td>
+            <td>2.770</td>
+            <td>51.1</td>
+            <td>+19.1</td>
+            <td>2.5327</td>
+          </tr>
+          <tr>
+            <td>52.00</td>
+            <td>216.6</td>
+            <td>11.93</td>
+            <td>18.16</td>
+            <td>2.584</td>
+            <td>50.2</td>
+            <td>+18.2</td>
+            <td>2.5551</td>
+          </tr>
+          <tr>
+            <td>52.50</td>
+            <td>216.8</td>
+            <td>11.42</td>
+            <td>18.98</td>
+            <td>2.476</td>
+            <td>48.4</td>
+            <td>+16.4</td>
+            <td>2.5764</td>
+          </tr>
+          <tr>
+            <td>53.00</td>
+            <td>222.0</td>
+            <td>10.95</td>
+            <td>20.27</td>
+            <td>2.431</td>
+            <td>47.2</td>
+            <td>+15.2</td>
+            <td>2.5966</td>
+          </tr>
+          <tr>
+            <td>53.50</td>
+            <td>218.2</td>
+            <td>10.12</td>
+            <td>21.56</td>
+            <td>2.208</td>
+            <td>46.4</td>
+            <td>+14.4</td>
+            <td>2.6157</td>
+          </tr>
+          <tr>
+            <td>54.00</td>
+            <td>219.5</td>
+            <td>9.68</td>
+            <td>22.68</td>
+            <td>2.125</td>
+            <td>45.2</td>
+            <td>+13.2</td>
+            <td>2.6336</td>
+          </tr>
+          <tr>
+            <td>54.50</td>
+            <td>215.0</td>
+            <td>8.71</td>
+            <td>24.68</td>
+            <td>1.873</td>
+            <td>43.9</td>
+            <td>+11.9</td>
+            <td>2.6504</td>
+          </tr>
+          <tr>
+            <td>55.00</td>
+            <td>220.8</td>
+            <td>8.09</td>
+            <td>27.29</td>
+            <td>1.786</td>
+            <td>42.2</td>
+            <td>+10.2</td>
+            <td>2.6660</td>
+          </tr>
+          <tr>
+            <td>55.50</td>
+            <td>218.0</td>
+            <td>7.78</td>
+            <td>28.02</td>
+            <td>1.696</td>
+            <td>42.0</td>
+            <td>+10.0</td>
+            <td>2.6805</td>
+          </tr>
+          <tr>
+            <td>56.00</td>
+            <td>217.6</td>
+            <td>7.29</td>
+            <td>29.85</td>
+            <td>1.586</td>
+            <td>40.4</td>
+            <td>+8.4</td>
+            <td>2.6940</td>
+          </tr>
+          <tr>
+            <td>56.50</td>
+            <td>219.6</td>
+            <td>6.54</td>
+            <td>33.58</td>
+            <td>1.436</td>
+            <td>39.8</td>
+            <td>+7.8</td>
+            <td>2.7064</td>
+          </tr>
+          <tr>
+            <td>57.00</td>
+            <td>221.0</td>
+            <td>6.07</td>
+            <td>36.41</td>
+            <td>1.341</td>
+            <td>38.8</td>
+            <td>+6.8</td>
+            <td>2.7176</td>
+          </tr>
+          <tr>
+            <td>57.50</td>
+            <td>222.4</td>
+            <td>5.13</td>
+            <td>43.35</td>
+            <td>1.141</td>
+            <td>37.8</td>
+            <td>+5.8</td>
+            <td>2.7277</td>
+          </tr>
+          <tr>
+            <td>58.00</td>
+            <td>219.9</td>
+            <td>4.67</td>
+            <td>47.09</td>
+            <td>1.027</td>
+            <td>36.0</td>
+            <td>+4.0</td>
+            <td>2.7366</td>
+          </tr>
+          <tr>
+            <td>58.50</td>
+            <td>220.3</td>
+            <td>3.85</td>
+            <td>57.22</td>
+            <td>0.848</td>
+            <td>36.0</td>
+            <td>+4.0</td>
+            <td>2.7445</td>
+          </tr>
+          <tr>
+            <td>59.00</td>
+            <td>221.5</td>
+            <td>3.44</td>
+            <td>64.39</td>
+            <td>0.762</td>
+            <td>35.4</td>
+            <td>+3.4</td>
+            <td>2.7514</td>
+          </tr>
+          <tr>
+            <td>59.50</td>
+            <td>219.3</td>
+            <td>2.74</td>
+            <td>80.04</td>
+            <td>0.601</td>
+            <td>34.4</td>
+            <td>+2.4</td>
+            <td>2.7571</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">EV Research V4.1 | Mock Simulation Report | 2026-05-24 03:23:58</div>
+
+<script>
+const t = [0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0, 10.5, 11.0, 11.5, 12.0, 12.5, 13.0, 13.5, 14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0, 24.5, 25.0, 25.5, 26.0, 26.5, 27.0, 27.5, 28.0, 28.5, 29.0, 29.5, 30.0, 30.5, 31.0, 31.5, 32.0, 32.5, 33.0, 33.5, 34.0, 34.5, 35.0, 35.5, 36.0, 36.5, 37.0, 37.5, 38.0, 38.5, 39.0, 39.5, 40.0, 40.5, 41.0, 41.5, 42.0, 42.5, 43.0, 43.5, 44.0, 44.5, 45.0, 45.5, 46.0, 46.5, 47.0, 47.5, 48.0, 48.5, 49.0, 49.5, 50.0, 50.5, 51.0, 51.5, 52.0, 52.5, 53.0, 53.5, 54.0, 54.5, 55.0, 55.5, 56.0, 56.5, 57.0, 57.5, 58.0, 58.5, 59.0, 59.5];
+const p = [0.0, 0.2397, 0.441, 0.7085, 0.9513, 1.375, 1.7772, 2.046, 2.3792, 2.767, 3.1464, 3.1416, 3.2062, 3.0931, 3.0908, 3.0952, 3.1377, 3.0688, 3.1937, 3.1704, 3.1339, 3.1095, 3.1588, 3.1198, 3.177, 3.1535, 3.1291, 3.1565, 3.1132, 3.0923, 3.1212, 3.1592, 3.1097, 3.1762, 3.1182, 3.1139, 3.1682, 3.212, 3.1233, 3.1552, 3.0543, 3.2208, 3.1038, 3.1161, 3.1595, 3.1364, 3.14, 3.1284, 3.2272, 3.0807, 3.1063, 3.1096, 3.1428, 3.132, 3.2157, 3.1467, 3.1609, 3.1545, 3.153, 3.0521, 3.1703, 3.1479, 3.1661, 3.1312, 3.1901, 3.101, 3.1407, 3.1893, 3.1241, 3.1384, 3.1639, 3.1382, 3.1952, 3.1602, 3.0507, 3.0709, 3.1306, 3.1768, 3.1689, 3.1608, 3.0831, 3.2042, 3.1002, 3.2141, 3.1089, 3.1617, 3.1749, 3.1566, 3.1241, 3.114, 3.1486, 3.1085, 3.0798, 3.0044, 2.8958, 2.8856, 2.8759, 2.7804, 2.886, 2.6571, 2.6967, 3.0067, 2.9042, 2.77, 2.584, 2.4759, 2.4309, 2.2082, 2.1248, 1.8727, 1.7863, 1.696, 1.5863, 1.4362, 1.3415, 1.1409, 1.0269, 0.8482, 0.762, 0.6009];
+const tp = [32.0, 33.0, 33.6, 35.6, 37.3, 40.0, 43.8, 46.6, 50.8, 54.0, 57.6, 58.3, 57.7, 58.4, 58.1, 58.7, 58.1, 58.7, 58.8, 58.7, 58.6, 58.7, 58.9, 58.7, 59.0, 58.8, 58.8, 59.3, 59.1, 59.4, 58.8, 59.3, 58.9, 59.3, 58.7, 58.9, 59.3, 59.1, 59.2, 58.7, 59.0, 59.0, 59.0, 58.5, 58.4, 58.9, 58.3, 58.4, 58.3, 58.0, 58.0, 58.4, 57.9, 57.9, 58.4, 57.9, 57.2, 57.8, 57.1, 57.8, 57.2, 57.4, 57.4, 56.7, 56.3, 57.2, 56.9, 56.4, 56.2, 56.0, 55.9, 56.3, 56.3, 55.5, 56.0, 55.8, 56.1, 55.6, 55.4, 56.3, 55.8, 55.6, 55.0, 55.3, 55.9, 55.0, 54.8, 55.7, 55.0, 55.4, 54.5, 54.6, 53.6, 53.1, 53.7, 52.6, 51.9, 51.7, 51.5, 50.8, 49.9, 53.3, 52.1, 51.1, 50.2, 48.4, 47.2, 46.4, 45.2, 43.9, 42.2, 42.0, 40.4, 39.8, 38.8, 37.8, 36.0, 36.0, 35.4, 34.4];
+const e = [0.0, 0.001068, 0.004103, 0.009145, 0.016081, 0.025657, 0.038229, 0.053875, 0.072637, 0.094388, 0.119079, 0.145319, 0.17158, 0.197703, 0.223802, 0.250042, 0.276324, 0.302511, 0.328702, 0.355016, 0.381114, 0.407408, 0.43365, 0.459869, 0.486132, 0.512352, 0.538524, 0.564715, 0.591023, 0.617196, 0.643291, 0.669497, 0.695721, 0.721944, 0.748139, 0.774352, 0.80058, 0.826788, 0.853006, 0.879258, 0.905519, 0.931724, 0.957824, 0.984017, 1.010232, 1.036494, 1.062731, 1.088937, 1.115165, 1.141364, 1.167543, 1.193755, 1.219949, 1.246233, 1.272385, 1.298594, 1.324866, 1.350946, 1.377175, 1.403375, 1.429622, 1.455821, 1.482117, 1.508313, 1.534479, 1.560747, 1.58691, 1.613078, 1.639303, 1.665653, 1.691931, 1.71811, 1.744398, 1.770519, 1.796662, 1.822942, 1.849138, 1.875476, 1.901662, 1.927866, 1.954112, 1.980323, 2.006468, 2.032655, 2.058859, 2.085243, 2.111455, 2.137715, 2.163886, 2.190111, 2.21637, 2.242348, 2.267934, 2.293147, 2.318009, 2.342515, 2.366674, 2.39028, 2.413623, 2.436518, 2.459088, 2.484725, 2.509214, 2.53274, 2.555135, 2.57635, 2.596574, 2.615705, 2.633592, 2.650379, 2.665967, 2.680537, 2.693996, 2.706391, 2.717571, 2.727661, 2.736645, 2.744477, 2.751421, 2.757149];
+const c = [0.0, 1.1, 2.0, 3.25, 4.34, 6.25, 8.06, 9.3, 11.02, 12.71, 14.56, 14.66, 14.62, 14.3, 14.25, 14.29, 14.56, 14.26, 14.65, 14.51, 14.59, 14.29, 14.55, 14.39, 14.56, 14.64, 14.44, 14.6, 14.48, 14.27, 14.43, 14.36, 14.37, 14.61, 14.18, 14.35, 14.46, 14.6, 14.5, 14.56, 14.16, 14.68, 14.29, 14.34, 14.56, 14.48, 14.43, 14.41, 14.77, 14.47, 14.21, 14.45, 14.41, 14.38, 14.63, 14.67, 14.44, 14.53, 14.49, 14.13, 14.63, 14.44, 14.53, 14.53, 14.58, 14.43, 14.46, 14.63, 14.43, 14.57, 14.54, 14.31, 14.57, 14.57, 14.15, 14.25, 14.46, 14.44, 14.63, 14.62, 14.3, 14.44, 14.28, 14.73, 14.44, 14.49, 14.76, 14.48, 14.43, 14.37, 14.55, 14.22, 14.05, 13.75, 13.5, 13.31, 13.15, 12.76, 13.13, 12.33, 12.45, 13.92, 13.31, 12.73, 11.93, 11.42, 10.95, 10.12, 9.68, 8.71, 8.09, 7.78, 7.29, 6.54, 6.07, 5.13, 4.67, 3.85, 3.44, 2.74];
+const v = [219.7, 217.9, 220.5, 218.0, 219.2, 220.0, 220.5, 220.0, 215.9, 217.7, 216.1, 214.3, 219.3, 216.3, 216.9, 216.6, 215.5, 215.2, 218.0, 218.5, 214.8, 217.6, 217.1, 216.8, 218.2, 215.4, 216.7, 216.2, 215.0, 216.7, 216.3, 220.0, 216.4, 217.4, 219.9, 217.0, 219.1, 220.0, 215.4, 216.7, 215.7, 219.4, 217.2, 217.3, 217.0, 216.6, 217.6, 217.1, 218.5, 212.9, 218.6, 215.2, 218.1, 217.8, 219.8, 214.5, 218.9, 217.1, 217.6, 216.0, 216.7, 218.0, 217.9, 215.5, 218.8, 214.9, 217.2, 218.0, 216.5, 215.4, 217.6, 219.3, 219.3, 216.9, 215.6, 215.5, 216.5, 220.0, 216.6, 216.2, 215.6, 221.9, 217.1, 218.2, 215.3, 218.2, 215.1, 218.0, 216.5, 216.7, 216.4, 218.6, 219.2, 218.5, 214.5, 216.8, 218.7, 217.9, 219.8, 215.5, 216.6, 216.0, 218.2, 217.6, 216.6, 216.8, 222.0, 218.2, 219.5, 215.0, 220.8, 218.0, 217.6, 219.6, 221.0, 222.4, 219.9, 220.3, 221.5, 219.3];
+
+Chart.defaults.color = '#8892b0';
+Chart.defaults.borderColor = '#2a2a4a';
+
+var baseOpts = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
+  plugins: {
+    legend: { labels: { color: '#ccd6f6', padding: 15 } },
+    tooltip: {
+      backgroundColor: '#1a1a2e',
+      titleColor: '#00d4ff',
+      bodyColor: '#ccd6f6',
+      borderColor: '#2a2a4a',
+      borderWidth: 1,
+      padding: 10
+    }
+  }
+};
+
+function xScale() {
+  return { title: { display: true, text: 'Time (min)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } };
+}
+
+function yScale(label, color, pos) {
+  return { type: 'linear', position: pos || 'left', title: { display: true, text: label, color: color || '#8892b0' }, ticks: { color: color || '#8892b0' }, grid: { color: '#1e1e3a' } };
+}
+
+new Chart(document.getElementById('chartPowerTemp'), {
+  type: 'line',
+  data: {
+    labels: t,
+    datasets: [
+      {
+        label: 'Power (kW)',
+        data: p,
+        borderColor: '#00d4ff',
+        backgroundColor: 'rgba(0,212,255,0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        yAxisID: 'y'
+      },
+      {
+        label: 'Temperature (\u00b0C)',
+        data: tp,
+        borderColor: '#ff6b6b',
+        backgroundColor: 'rgba(255,107,107,0.1)',
+        borderWidth: 2,
+        borderDash: [5, 3],
+        fill: true,
+        tension: 0.3,
+        pointRadius: 0,
+        yAxisID: 'y1'
+      }
+    ]
+  },
+  options: Object.assign({}, baseOpts, {
+    scales: {
+      x: xScale(),
+      y: { type: 'linear', position: 'left', title: { display: true, text: 'Power (kW)', color: '#00d4ff' }, ticks: { color: '#00d4ff' }, grid: { color: '#1e1e3a' } },
+      y1: { type: 'linear', position: 'right', title: { display: true, text: 'Temperature (\u00b0C)', color: '#ff6b6b' }, ticks: { color: '#ff6b6b' }, grid: { drawOnChartArea: false } }
+    }
+  })
+});
+
+new Chart(document.getElementById('chartVoltage'), {
+  type: 'line',
+  data: {
+    labels: t,
+    datasets: [{
+      label: 'Voltage (V)',
+      data: v,
+      borderColor: '#6bcb77',
+      backgroundColor: 'rgba(107,203,119,0.1)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.3,
+      pointRadius: 0
+    }]
+  },
+  options: Object.assign({}, baseOpts, {
+    scales: { x: xScale(), y: yScale('Voltage (V)', '#6bcb77') }
+  })
+});
+
+new Chart(document.getElementById('chartCurrent'), {
+  type: 'line',
+  data: {
+    labels: t,
+    datasets: [{
+      label: 'Current (A)',
+      data: c,
+      borderColor: '#a855f7',
+      backgroundColor: 'rgba(168,85,247,0.1)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.3,
+      pointRadius: 0
+    }]
+  },
+  options: Object.assign({}, baseOpts, {
+    scales: { x: xScale(), y: yScale('Current (A)', '#a855f7') }
+  })
+});
+
+new Chart(document.getElementById('chartEnergy'), {
+  type: 'line',
+  data: {
+    labels: t,
+    datasets: [{
+      label: 'Cumulative Energy (kWh)',
+      data: e,
+      borderColor: '#ffd93d',
+      backgroundColor: 'rgba(255,217,61,0.15)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.3,
+      pointRadius: 0
+    }]
+  },
+  options: Object.assign({}, baseOpts, {
+    scales: { x: xScale(), y: yScale('Energy (kWh)', '#ffd93d') }
+  })
+});
+
+var r_data = v.map(function(voltage, i) { return c[i] > 0.01 ? +(voltage / c[i]).toFixed(2) : 0; });
+new Chart(document.getElementById('chartResistance'), {
+  type: 'line',
+  data: {
+    labels: t,
+    datasets: [{
+      label: 'Resistance (\u2126)',
+      data: r_data,
+      borderColor: '#f97316',
+      backgroundColor: 'rgba(249,115,22,0.1)',
+      borderWidth: 2,
+      fill: true,
+      tension: 0.3,
+      pointRadius: 0
+    }]
+  },
+  options: Object.assign({}, baseOpts, {
+    scales: { x: xScale(), y: yScale('Resistance (\u2126)', '#f97316') }
+  })
+});
+</script>
+
+</body>
+</html>
