@@ -594,6 +594,9 @@ function updateCharts(t, p, tp, e, c, v, r, tr) {
     })
   });
 
+  var eNorm = e.map(function(val) { return val - e[0]; });
+  var trNorm = tr.map(function(val) { return val - tr[0]; });
+
   charts.energyCompare = new Chart(document.getElementById('chartEnergyCompare'), {
     type: 'line',
     data: {
@@ -601,7 +604,7 @@ function updateCharts(t, p, tp, e, c, v, r, tr) {
       datasets: [
         {
           label: 'Calculated Energy (kWh)',
-          data: e,
+          data: eNorm,
           borderColor: '#ffd93d',
           backgroundColor: 'rgba(255,217,61,0.1)',
           borderWidth: 2,
@@ -612,7 +615,7 @@ function updateCharts(t, p, tp, e, c, v, r, tr) {
         },
         {
           label: 'Tuya Raw Energy (kWh)',
-          data: tr,
+          data: trNorm,
           borderColor: '#4d96ff',
           backgroundColor: 'rgba(77,150,255,0.1)',
           borderWidth: 2,
