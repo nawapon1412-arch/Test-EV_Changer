@@ -25,14 +25,15 @@ raw_total = dps.get('1', 0) / 100.0
 - อ่านจาก DPS (Data Point) `1` ของ Tuya Smart Plug
 - เป็นค่า **Cumulative Energy** สะสมทั้งหมดตั้งแต่รีเซ็ตล่าสุด
 - หน่วยดิบ = 0.01 kWh (หาร 100 เพื่อแปลงเป็น kWh)
+- **ข้อมูลใน CSV ถูก normalize ให้เริ่มจาก 0** โดยลบค่าเริ่มต้นออกจากทุกจุดข้อมูล
 - วัด **Real Power (P)** ที่คำนึง Power Factor แล้ว
 
 ## 3. เปรียบเทียบจากข้อมูลจริง
 
-| ตัวชี้วัด | Calculated Energy | Tuya Raw Energy |
+| ตัวชี้วัด | Calculated Energy | Tuya Raw Energy (Normalized) |
 |---|---|---|
-| จุดเริ่มต้น | 0.0000 kWh | 27.79 kWh |
-| จุดสิ้นสุด (60 นาที) | 1.8337 kWh | 29.44 kWh |
+| จุดเริ่มต้น | 0.0000 kWh | 0.00 kWh |
+| จุดสิ้นสุด (60 นาที) | 1.8337 kWh | 1.65 kWh |
 | **Delta (พลังงานชาร์จ)** | **1.8337 kWh** | **1.65 kWh** |
 
 ## 4. สาเหตุที่ค่าไม่เท่ากัน
@@ -62,6 +63,6 @@ raw_total = dps.get('1', 0) / 100.0
 Apparent Power (VA)    = V × I
 Real Power (W)         = V × I × PF
 Energy (kWh)           = Σ (Power × Δt / 3600)
-Tuya Raw (kWh)         = DPS_1 / 100      (cumulative)
-Tuya Delta (kWh)       = Tuya_End - Tuya_Start
+Tuya Raw (kWh)         = DPS_1 / 100      (normalized: start from 0)
+Tuya Delta (kWh)       = Tuya_End - Tuya_Start (= Tuya_End since start = 0)
 ```
