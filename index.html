@@ -630,8 +630,8 @@ function updateCharts(t, p, tp, e, c, v, r, tr) {
     options: Object.assign({}, baseOpts, {
       scales: {
         x: xScale(),
-        y: { type: 'linear', position: 'left', title: { display: true, text: 'Calculated Energy (kWh)', color: '#ffd93d' }, ticks: { color: '#ffd93d' }, grid: { color: '#1e1e3a' } },
-        y1: { type: 'linear', position: 'right', title: { display: true, text: 'Tuya Raw Energy (kWh)', color: '#4d96ff' }, ticks: { color: '#4d96ff' }, grid: { drawOnChartArea: false } }
+        y: { type: 'linear', min: 0, position: 'left', title: { display: true, text: 'Calculated Energy (kWh)', color: '#ffd93d' }, ticks: { color: '#ffd93d' }, grid: { color: '#1e1e3a' } },
+        y1: { type: 'linear', min: 0, position: 'right', title: { display: true, text: 'Tuya Raw Energy (kWh)', color: '#4d96ff' }, ticks: { color: '#4d96ff' }, grid: { drawOnChartArea: false } }
       }
     })
   });
