@@ -188,7 +188,7 @@
 <body>
 
 <div class="header">
-  <h1>EV Charging Research Report — MG ZS EV</h1>
+  <h1 id="headerTitle">EV Charging Research Report — MG ZS EV</h1>
   <div class="subtitle" id="headerSubtitle">
     Charging Profile Analysis &nbsp;
     <span class="badge badge-real" id="headerBadge">REAL DATA</span>
@@ -199,12 +199,13 @@
 <div class="container">
 
   <div class="file-selector-wrapper">
+    <label>Select Car:</label>
+    <select id="carSelector">
+      <option value="mg">MG ZS EV</option>
+      <option value="rd6">RD6</option>
+    </select>
     <label>Select Data File:</label>
     <select id="fileSelector">
-      <option value="Research_Data_Real.csv">Real 1Hr - 8A </option>
-      <option value="Research_Data_1Hr_20260519_114613.csv">Real 1Hr - 10A </option>
-      <option value="Research_Data_1Hr_20260519_130459.csv">Real 1Hr - 13A </option>
-      <option value="Research_Data_1Hr_20260519_140940.csv">Real 1Hr - 16A </option>
     </select>
   </div>
 
@@ -321,12 +322,37 @@
 <script>
 var charts = {};
 
-var CSV_FILES = [
-  { file: 'Research_Data_Real.csv', label: 'Real Data 10A', type: 'real' },
-  { file: 'Research_Data_1Hr_20260519_114613.csv', label: 'Real 1Hr 10A', type: 'real' },
-  { file: 'Research_Data_1Hr_20260519_130459.csv', label: 'Real 1Hr 13A', type: 'real' },
-  { file: 'Research_Data_1Hr_20260519_140940.csv', label: 'Real 1Hr 16A', type: 'real' }
-];
+var CSV_FILES = {
+  mg: [
+    { file: 'Research_Data_Real.csv', label: 'Real 1Hr - 8A', type: 'real' },
+    { file: 'Research_Data_1Hr_20260519_114613.csv', label: 'Real 1Hr - 10A', type: 'real' },
+    { file: 'Research_Data_1Hr_20260519_130459.csv', label: 'Real 1Hr - 13A', type: 'real' },
+    { file: 'Research_Data_1Hr_20260519_140940.csv', label: 'Real 1Hr - 16A', type: 'real' }
+  ],
+  rd6: [
+    { file: 'Research_Data_1Hr_20260527_111414.csv', label: 'RD6 1Hr - 8A', type: 'real' },
+    { file: 'Research_Data_1Hr_10A_20260527_122748.csv', label: 'RD6 1Hr - 10A', type: 'real' },
+    { file: 'Research_Data_1Hr_13A_20260527_133445.csv', label: 'RD6 1Hr - 13A', type: 'real' },
+    { file: 'Research_Data_1Hr_16A_20260527_143741.csv', label: 'RD6 1Hr - 16A', type: 'real' }
+  ]
+};
+
+var CAR_NAMES = {
+  mg: 'MG ZS EV',
+  rd6: 'RD6'
+};
+
+function populateFileSelector(car) {
+  var sel = document.getElementById('fileSelector');
+  sel.innerHTML = '';
+  CSV_FILES[car].forEach(function(item) {
+    var opt = document.createElement('option');
+    opt.value = item.file;
+    opt.textContent = item.label;
+    sel.appendChild(opt);
+  });
+  document.getElementById('headerTitle').textContent = 'EV Charging Research Report \u2014 ' + CAR_NAMES[car];
+}
 
 function parseCSV(text) {
   var lines = text.trim().split('\n');
@@ -350,7 +376,8 @@ function loadData(fileName) {
   document.getElementById('loadingArea').style.display = 'block';
   document.getElementById('reportArea').style.display = 'none';
 
-  var fileInfo = CSV_FILES.find(function(f) { return f.file === fileName; });
+  var currentCar = document.getElementById('carSelector').value;
+  var fileInfo = CSV_FILES[currentCar].find(function(f) { return f.file === fileName; });
   var isReal = fileInfo && fileInfo.type === 'real';
 
   var badge = document.getElementById('headerBadge');
@@ -670,11 +697,17 @@ function initAnimations() {
   });
 }
 
+document.getElementById('carSelector').addEventListener('change', function() {
+  populateFileSelector(this.value);
+  loadData(document.getElementById('fileSelector').value);
+});
+
 document.getElementById('fileSelector').addEventListener('change', function() {
   loadData(this.value);
 });
 
 window.addEventListener('DOMContentLoaded', function() {
+  populateFileSelector('mg');
   loadData(document.getElementById('fileSelector').value);
 });
 </script>
