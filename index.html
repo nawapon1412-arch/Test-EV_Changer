@@ -292,6 +292,37 @@
     </div>
 
     <div class="chart-section">
+      <h2>Tuya vs Calculated Energy Comparison (All Cars)</h2>
+      <div class="table-container" style="max-height:none;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Current</th>
+              <th>MG Difference</th>
+              <th>MG Power Factor</th>
+              <th>RD6 Difference</th>
+              <th>RD6 Power Factor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>8A</td><td>10%</td><td>0.900</td><td>23%</td><td>0.772</td></tr>
+            <tr><td>10A</td><td>29%</td><td>0.714</td><td>46%</td><td>0.544</td></tr>
+            <tr><td>13A</td><td>31%</td><td>0.695</td><td>55%</td><td>0.455</td></tr>
+            <tr><td>16A</td><td>5%</td><td>0.950</td><td>18%</td><td>0.819</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="margin-top:15px;padding:12px 15px;background:#16213e;border-radius:8px;border:1px solid #2a2a4a;">
+        <p style="color:#ccd6f6;font-size:13px;line-height:1.6;">
+          <strong style="color:#00d4ff;">Summary:</strong>
+          At low current (10A, 13A) the difference is large because Tuya updates slowly and has low resolution (0.01 kWh),
+          making the values appear further apart than reality. At high current (8A, 16A) the values are much closer (5-23%).
+          <strong style="color:#6bcb77;">The most reliable data is at 16A</strong> — MG differs by only 5%, RD6 by 18%.
+        </p>
+      </div>
+    </div>
+
+    <div class="chart-section">
       <h2 id="dataLogTitle">Data Log</h2>
       <div class="table-container">
         <table class="data-table">
