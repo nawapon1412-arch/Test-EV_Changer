@@ -190,7 +190,7 @@
 <div class="header">
   <h1 id="headerTitle">EV Charging Research Report — MG ZS EV</h1>
   <div class="subtitle" id="headerSubtitle">
-    Charging Profile Analysis &nbsp;
+    Charging Profile Analysis &mdash; Household 230V AC &nbsp;
     <span class="badge badge-real" id="headerBadge">REAL DATA</span>
     &nbsp;|&nbsp; <span id="headerSource">Loading...</span>
   </div>
@@ -423,9 +423,12 @@ function loadData(fileName) {
     })
     .then(function(text) {
       var rows = parseCSV(text);
+      var filteredRows = rows.filter(function(row) {
+        return parseFloat(row['Power(kW)']) > 0 && parseFloat(row['Current(A)']) > 0;
+      });
 
       var t = [], p = [], tp = [], e = [], c = [], v = [], r = [], tr = [];
-      rows.forEach(function(row) {
+      filteredRows.forEach(function(row) {
         t.push(parseFloat(row['Time_Min']));
         v.push(parseFloat(row['Voltage(V)']));
         c.push(parseFloat(row['Current(A)']));
@@ -462,7 +465,7 @@ function loadData(fileName) {
 
       var tbody = '';
       for (var i = 0; i < totalPoints; i++) {
-        var tempRise = parseFloat(rows[i]['Temp_Rise(C)']);
+        var tempRise = parseFloat(filteredRows[i]['Temp_Rise(C)']);
         tbody += '<tr>' +
           '<td>' + t[i].toFixed(2) + '</td>' +
           '<td>' + v[i] + '</td>' +
