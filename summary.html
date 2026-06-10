@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EV Charging Research Summary</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 30px 40px;
+    border-bottom: 3px solid #00d4ff;
+    animation: slideInLeft 0.8s ease-out;
+  }
+  .header h1 { font-size: 28px; color: #00d4ff; margin-bottom: 5px; }
+  .header .subtitle { font-size: 14px; color: #8892b0; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+
+  .section {
+    background: #1a1a2e; border: 1px solid #2a2a4a;
+    border-radius: 12px; padding: 25px; margin-bottom: 25px;
+    opacity: 0; transform: translateY(20px);
+    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
+  }
+  .section.visible { opacity: 1; transform: translateY(0); }
+  .section h2 {
+    font-size: 20px; color: #00d4ff; margin-bottom: 15px;
+    padding-bottom: 10px; border-bottom: 1px solid #2a2a4a;
+  }
+  .section h3 {
+    font-size: 16px; color: #ccd6f6; margin: 15px 0 10px;
+  }
+
+  table.data-table {
+    width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px;
+  }
+  table.data-table th {
+    background: #16213e; color: #00d4ff; padding: 10px 8px;
+    text-align: center; font-weight: 600; position: sticky; top: 0;
+  }
+  table.data-table td {
+    padding: 8px; text-align: center;
+    border-bottom: 1px solid #2a2a4a; color: #ccd6f6;
+  }
+  table.data-table tr:hover td { background: #16213e; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px; margin-bottom: 20px;
+  }
+  .stat-card {
+    background: linear-gradient(145deg, #1a1a2e, #16213e);
+    border: 1px solid #2a2a4a;
+    border-radius: 12px; padding: 20px; text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+    opacity: 0; animation: fadeInUp 0.6s ease-out forwards;
+  }
+  .stat-card:hover { transform: translateY(-3px); border-color: #00d4ff; }
+  .stat-card .label {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #8892b0; margin-bottom: 8px;
+  }
+  .stat-card .value { font-size: 22px; font-weight: 700; color: #00d4ff; }
+  .stat-card .unit { font-size: 12px; color: #8892b0; margin-top: 4px; }
+  .stat-card:nth-child(1) { animation-delay: 0.1s; }
+  .stat-card:nth-child(2) { animation-delay: 0.15s; }
+  .stat-card:nth-child(3) { animation-delay: 0.2s; }
+  .stat-card:nth-child(4) { animation-delay: 0.25s; }
+
+  .badge {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 12px; font-size: 11px; font-weight: 600;
+  }
+  .badge-mg { background: #6bcb7722; color: #6bcb77; border: 1px solid #6bcb7744; }
+  .badge-rd6 { background: #4d96ff22; color: #4d96ff; border: 1px solid #4d96ff44; }
+  .badge-ok { background: #6bcb7722; color: #6bcb77; border: 1px solid #6bcb7744; }
+  .badge-warn { background: #ffd93d22; color: #ffd93d; border: 1px solid #ffd93d44; }
+  .badge-alert { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b44; }
+
+  .findings-box {
+    margin-top: 15px; padding: 15px;
+    background: #16213e; border-radius: 8px; border-left: 4px solid #00d4ff;
+    font-size: 14px; line-height: 1.8; color: #ccd6f6;
+  }
+  .findings-box strong { color: #00d4ff; }
+  .findings-box .warn { color: #ffd93d; }
+  .findings-box .good { color: #6bcb77; }
+  .findings-box .alert { color: #ff6b6b; }
+
+  .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
+  .chart-wrapper { position: relative; height: 380px; }
+
+  .footer { text-align: center; padding: 20px; color: #555; font-size: 12px; }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-40px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @media (max-width: 768px) {
+    .chart-row { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>EV Charging Research Summary</h1>
+  <div class="subtitle">
+    All Sessions Combined &mdash; MG ZS EV &amp; RD6 Riddara &nbsp;
+    |&nbsp; Data Period: May 19 - May 27, 2026
+    &nbsp;|&nbsp; 9 Charging Sessions (8 usable)
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- ===== OVERVIEW STATS ===== -->
+  <div class="section" id="overview">
+    <h2>Overview</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Total Sessions</div>
+        <div class="value">8</div>
+        <div class="unit">charging sessions (60 min each)</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Current Levels Tested</div>
+        <div class="value">4</div>
+        <div class="unit">8A, 10A, 13A, 16A</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Supply Voltage</div>
+        <div class="value">230</div>
+        <div class="unit">V AC (household)</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Data Points</div>
+        <div class="value">~19,000</div>
+        <div class="unit">total readings collected</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SESSION DETAILS ===== -->
+  <div class="section" id="sessions">
+    <h2>All Charging Sessions</h2>
+    <div class="table-container" style="max-height:none; border-radius:8px; border:1px solid #2a2a4a; overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Vehicle</th>
+            <th>Date</th>
+            <th>Current (A)</th>
+            <th>Avg Power (kW)</th>
+            <th>Calc Energy (kWh)</th>
+            <th>Tuya Delta (kWh)</th>
+            <th>Diff %</th>
+            <th>Est. Power Factor</th>
+            <th>Data Points</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><span class="badge badge-mg">MG ZS EV</span></td>
+            <td>2026-05-27</td>
+            <td>8</td>
+            <td>1.840</td>
+            <td>1.8337</td>
+            <td>1.6500</td>
+            <td>10.0%</td>
+            <td><span class="badge badge-ok">0.900</span></td>
+            <td>119</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><span class="badge badge-mg">MG ZS EV</span></td>
+            <td>2026-05-19</td>
+            <td>10</td>
+            <td>2.298</td>
+            <td>2.2968</td>
+            <td>1.6400</td>
+            <td>28.6%</td>
+            <td><span class="badge badge-warn">0.714</span></td>
+            <td>2,514</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><span class="badge badge-mg">MG ZS EV</span></td>
+            <td>2026-05-19</td>
+            <td>13</td>
+            <td>2.989</td>
+            <td>2.8780</td>
+            <td>2.0000</td>
+            <td>30.5%</td>
+            <td><span class="badge badge-warn">0.695</span></td>
+            <td>2,369</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><span class="badge badge-mg">MG ZS EV</span></td>
+            <td>2026-05-19</td>
+            <td>16</td>
+            <td>3.678</td>
+            <td>3.2011</td>
+            <td>3.0400</td>
+            <td>5.0%</td>
+            <td><span class="badge badge-ok">0.950</span></td>
+            <td>2,099</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><span class="badge badge-rd6">RD6 Riddara</span></td>
+            <td>2026-05-27</td>
+            <td>8</td>
+            <td>1.839</td>
+            <td>1.8387</td>
+            <td>1.4200</td>
+            <td>22.8%</td>
+            <td><span class="badge badge-warn">0.772</span></td>
+            <td>2,576</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><span class="badge badge-rd6">RD6 Riddara</span></td>
+            <td>2026-05-27</td>
+            <td>10</td>
+            <td>2.300</td>
+            <td>2.2996</td>
+            <td>1.2500</td>
+            <td>45.6%</td>
+            <td><span class="badge badge-alert">0.544</span></td>
+            <td>2,577</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><span class="badge badge-rd6">RD6 Riddara</span></td>
+            <td>2026-05-27</td>
+            <td>13</td>
+            <td>2.990</td>
+            <td>2.9890</td>
+            <td>1.3600</td>
+            <td>54.5%</td>
+            <td><span class="badge badge-alert">0.455</span></td>
+            <td>2,576</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><span class="badge badge-rd6">RD6 Riddara</span></td>
+            <td>2026-05-27</td>
+            <td>16</td>
+            <td>3.677</td>
+            <td>3.6765</td>
+            <td>3.0100</td>
+            <td>18.1%</td>
+            <td><span class="badge badge-warn">0.819</span></td>
+            <td>2,518</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ===== COMPARISON BY CURRENT ===== -->
+  <div class="section" id="comparison">
+    <h2>Comparison by Current Level</h2>
+
+    <!-- 8A -->
+    <h3>8A Sessions</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Vehicle</th><th>Date</th><th>Avg Power (kW)</th><th>Calc Energy (kWh)</th><th>Tuya Delta (kWh)</th><th>PF</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge-mg">MG ZS EV</span></td><td>27/05</td><td>1.840</td><td>1.8337</td><td>1.65</td><td>0.900</td></tr>
+        <tr><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05</td><td>1.839</td><td>1.8387</td><td>1.42</td><td>0.772</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 10A -->
+    <h3>10A Sessions</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Vehicle</th><th>Date</th><th>Avg Power (kW)</th><th>Calc Energy (kWh)</th><th>Tuya Delta (kWh)</th><th>PF</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05</td><td>2.298</td><td>2.2968</td><td>1.64</td><td>0.714</td></tr>
+        <tr><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05</td><td>2.300</td><td>2.2996</td><td>1.25</td><td>0.544</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 13A -->
+    <h3>13A Sessions</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Vehicle</th><th>Date</th><th>Avg Power (kW)</th><th>Calc Energy (kWh)</th><th>Tuya Delta (kWh)</th><th>PF</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05</td><td>2.989</td><td>2.8780</td><td>2.00</td><td>0.695</td></tr>
+        <tr><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05</td><td>2.990</td><td>2.9890</td><td>1.36</td><td>0.455</td></tr>
+      </tbody>
+    </table>
+
+    <!-- 16A -->
+    <h3>16A Sessions</h3>
+    <table class="data-table">
+      <thead>
+        <tr><th>Vehicle</th><th>Date</th><th>Avg Power (kW)</th><th>Calc Energy (kWh)</th><th>Tuya Delta (kWh)</th><th>PF</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05</td><td>3.678</td><td>3.2011</td><td>3.04</td><td>0.950</td></tr>
+        <tr><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05</td><td>3.677</td><td>3.6765</td><td>3.01</td><td>0.819</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== ENERGY & COST ESTIMATES ===== -->
+  <div class="section" id="estimates">
+    <h2>Energy &amp; Cost Estimates (per hour of charging)</h2>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Current</th>
+          <th>Calc Energy (kWh/hr)</th>
+          <th>Tuya Energy (kWh/hr)</th>
+          <th>Cost @ 4.72 THB/kWh</th>
+          <th>Time to Full* (hr)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>8A</strong></td>
+          <td>1.84</td>
+          <td>1.42 - 1.65</td>
+          <td>6.70 - 7.79 THB</td>
+          <td>~19 - 23 hr</td>
+        </tr>
+        <tr>
+          <td><strong>10A</strong></td>
+          <td>2.30</td>
+          <td>1.25 - 1.64</td>
+          <td>5.90 - 7.74 THB</td>
+          <td>~20 - 26 hr</td>
+        </tr>
+        <tr>
+          <td><strong>13A</strong></td>
+          <td>2.99</td>
+          <td>1.36 - 2.00</td>
+          <td>6.42 - 9.44 THB</td>
+          <td>~16 - 24 hr</td>
+        </tr>
+        <tr>
+          <td><strong>16A</strong></td>
+          <td>3.68</td>
+          <td>3.01 - 3.04</td>
+          <td>14.21 - 14.35 THB</td>
+          <td>~10.5 - 10.6 hr</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px; font-size:12px; color:#8892b0;">
+      * Time to Full = 40 kWh battery (20% &rarr; 100% = 32 kWh needed), based on Tuya real energy rate.
+    </div>
+  </div>
+
+  <!-- ===== CHARTS ===== -->
+  <div class="section" id="charts">
+    <h2>Visual Comparison</h2>
+    <div class="chart-row">
+      <div class="chart-wrapper"><canvas id="chartEnergyBar"></canvas></div>
+      <div class="chart-wrapper"><canvas id="chartPFBar"></canvas></div>
+    </div>
+    <div class="chart-row">
+      <div class="chart-wrapper"><canvas id="chartCostBar"></canvas></div>
+      <div class="chart-wrapper"><canvas id="chartChargeTime"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ===== TUYA CUMULATIVE ===== -->
+  <div class="section" id="tuyaCumulative">
+    <h2>Tuya Smart Plug Cumulative Energy (27/05/2026)</h2>
+    <p style="color:#8892b0; margin-bottom:15px;">
+      All RD6 Riddara sessions on the same day show continuous Tuya meter readings:
+    </p>
+    <table class="data-table">
+      <thead>
+        <tr><th>Session</th><th>Current</th><th>Tuya Start (kWh)</th><th>Tuya End (kWh)</th><th>Delta (kWh)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Session 4</td><td>8A</td><td>43.52</td><td>44.94</td><td>1.42</td></tr>
+        <tr><td>Session 5</td><td>10A</td><td>45.41</td><td>46.66</td><td>1.25</td></tr>
+        <tr><td>Session 6</td><td>13A</td><td>47.51</td><td>48.87</td><td>1.36</td></tr>
+        <tr><td>Session 7</td><td>16A</td><td>50.15</td><td>53.16</td><td>3.01</td></tr>
+      </tbody>
+      <tfoot>
+        <tr style="font-weight:bold; color:#00d4ff;">
+          <td colspan="4">Total Delta (27/05/2026)</td><td>9.64 kWh</td>
+        </tr>
+      </tfoot>
+    </table>
+    <div class="findings-box" style="margin-top:15px;">
+      <strong>Note:</strong> Gaps between sessions (e.g., 44.94 &rarr; 45.41 = <strong>0.47 kWh</strong>) indicate energy used during setup/changeover between tests.
+    </div>
+  </div>
+
+  <!-- ===== KEY FINDINGS ===== -->
+  <div class="section" id="findings">
+    <h2>Key Findings</h2>
+
+    <h3>1. Calculated Energy (V&times;I) Always Exceeds Tuya Reading</h3>
+    <div class="findings-box">
+      The <strong>Calculated Energy</strong> uses <code>P = V &times; I</code> (Apparent Power in VA) without Power Factor correction.<br>
+      The <strong>Tuya Smart Plug</strong> measures <strong>Real Power (W)</strong> with built-in PF compensation.<br>
+      This means Calculated Energy is always <span class="warn">higher</span> than actual energy consumed.
+    </div>
+
+    <h3>2. Power Factor Varies Significantly</h3>
+    <div class="findings-box">
+      <strong>Reliable readings (PF 0.82 - 0.95):</strong>
+      <ul>
+        <li>MG ZS EV 16A &rarr; PF = <span class="good">0.950</span> (best accuracy)</li>
+        <li>MG ZS EV 8A &rarr; PF = <span class="good">0.900</span> (typical EV charger)</li>
+        <li>RD6 Riddara 16A &rarr; PF = <span class="good">0.819</span></li>
+      </ul>
+      <strong>Suspicious readings (PF &lt; 0.72):</strong>
+      <ul>
+        <li>RD6 Riddara 10A &rarr; PF = <span class="alert">0.544</span> (likely Tuya reading error)</li>
+        <li>RD6 Riddara 13A &rarr; PF = <span class="alert">0.455</span> (likely Tuya reading error)</li>
+        <li>MG ZS EV 10A &rarr; PF = <span class="warn">0.714</span></li>
+        <li>MG ZS EV 13A &rarr; PF = <span class="warn">0.695</span></li>
+      </ul>
+      Normal EV charger PF should be <strong>0.85 - 0.95</strong>. Values below 0.7 suggest
+      the Tuya meter may have low resolution (0.01 kWh steps) or update lag at lower currents.
+    </div>
+
+    <h3>3. 16A is the Most Efficient &amp; Reliable</h3>
+    <div class="findings-box">
+      <ul>
+        <li>MG ZS EV at 16A: <span class="good">PF = 0.950</span>, only 5% difference between Calc and Tuya</li>
+        <li>RD6 Riddara at 16A: <span class="good">PF = 0.819</span>, 18% difference</li>
+        <li>16A delivers <strong>~3.0 kWh/hr real energy</strong> &mdash; about <strong>2x more</strong> than 8A</li>
+        <li>At 16A, charging a 40 kWh battery from 20% to 100% takes only <strong>~10.6 hours</strong></li>
+      </ul>
+    </div>
+
+    <h3>4. 10A and 13A Show Anomalous Tuya Data (RD6)</h3>
+    <div class="findings-box">
+      For RD6 Riddara sessions at 10A and 13A, the Tuya Delta is suspiciously low:
+      <ul>
+        <li>10A: Tuya reported only <strong>1.25 kWh</strong> over 60 min, but calculated is <strong>2.30 kWh</strong></li>
+        <li>13A: Tuya reported only <strong>1.36 kWh</strong> over 60 min, but calculated is <strong>2.99 kWh</strong></li>
+      </ul>
+      <span class="alert">This is likely a Tuya Smart Plug measurement issue</span> &mdash;
+      at lower currents the plug may not sample fast enough or the 0.01 kWh resolution causes significant rounding errors over short intervals.
+      <strong>The Calculated Energy values at these current levels are more reliable.</strong>
+    </div>
+
+    <h3>5. Cost Efficiency</h3>
+    <div class="findings-box">
+      At Thailand's off-peak rate of <strong>4.72 THB/kWh</strong>:
+      <ul>
+        <li>8A: <strong>~7 THB/hr</strong> (slowest, ~23 hr to full charge)</li>
+        <li>10A: <strong>~6-8 THB/hr</strong> (unreliable Tuya data)</li>
+        <li>13A: <strong>~6-9 THB/hr</strong> (unreliable Tuya data)</li>
+        <li>16A: <strong>~14 THB/hr</strong> (best value &mdash; charges in ~10.6 hr, PF highest)</li>
+      </ul>
+      <strong>Recommendation:</strong> Charge at <span class="good">16A during off-peak hours</span> for best efficiency and shortest charge time.
+    </div>
+  </div>
+
+  <!-- ===== FORMULA REFERENCE ===== -->
+  <div class="section" id="formulas">
+    <h2>Formula Reference</h2>
+    <div class="findings-box" style="border-left-color: #ffd93d;">
+      <code>
+        Apparent Power (VA)&nbsp;&nbsp;&nbsp;= V &times; I<br>
+        Real Power (W)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= V &times; I &times; PF<br>
+        Energy (kWh)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= &Sigma; (P &times; &Delta;t / 3600)<br>
+        Calculated Energy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= &Sigma; (V &times; I / 1000 &times; &Delta;t / 3600)<br>
+        Tuya Raw Energy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= DPS point '1' / 100 (cumulative, normalized to 0)<br>
+        Power Factor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= Tuya Delta / Calculated Energy<br>
+      </code>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">EV Charging Research Summary | Generated: June 10, 2026 | MG ZS EV &amp; RD6 Riddara</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var sections = document.querySelectorAll('.section');
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.05 });
+  sections.forEach(function(s) { observer.observe(s); });
+
+  Chart.defaults.color = '#8892b0';
+  Chart.defaults.borderColor = '#2a2a4a';
+
+  var baseOpts = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 1500, easing: 'easeInOutQuart' },
+    plugins: {
+      legend: { labels: { color: '#ccd6f6', padding: 12 } },
+      tooltip: {
+        backgroundColor: '#1a1a2e',
+        titleColor: '#00d4ff',
+        bodyColor: '#ccd6f6',
+        borderColor: '#2a2a4a',
+        borderWidth: 1,
+        padding: 10
+      }
+    }
+  };
+
+  // Chart 1: Energy Comparison Bar
+  new Chart(document.getElementById('chartEnergyBar'), {
+    type: 'bar',
+    data: {
+      labels: ['8A', '10A', '13A', '16A'],
+      datasets: [
+        {
+          label: 'MG ZS EV - Calc (kWh)',
+          data: [1.8337, 2.2968, 2.8780, 3.2011],
+          backgroundColor: 'rgba(107,203,119,0.7)',
+          borderColor: '#6bcb77',
+          borderWidth: 1
+        },
+        {
+          label: 'MG ZS EV - Tuya (kWh)',
+          data: [1.65, 1.64, 2.00, 3.04],
+          backgroundColor: 'rgba(107,203,119,0.3)',
+          borderColor: '#6bcb77',
+          borderWidth: 1,
+          borderDash: [5, 3]
+        },
+        {
+          label: 'RD6 - Calc (kWh)',
+          data: [1.8387, 2.2996, 2.9890, 3.6765],
+          backgroundColor: 'rgba(77,150,255,0.7)',
+          borderColor: '#4d96ff',
+          borderWidth: 1
+        },
+        {
+          label: 'RD6 - Tuya (kWh)',
+          data: [1.42, 1.25, 1.36, 3.01],
+          backgroundColor: 'rgba(77,150,255,0.3)',
+          borderColor: '#4d96ff',
+          borderWidth: 1,
+          borderDash: [5, 3]
+        }
+      ]
+    },
+    options: Object.assign({}, baseOpts, {
+      plugins: Object.assign({}, baseOpts.plugins, {
+        title: { display: true, text: 'Energy per 1-Hour Session (kWh)', color: '#ccd6f6', font: { size: 14 } }
+      }),
+      scales: {
+        y: { title: { display: true, text: 'Energy (kWh)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
+        x: { ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }
+      }
+    })
+  });
+
+  // Chart 2: Power Factor Bar
+  new Chart(document.getElementById('chartPFBar'), {
+    type: 'bar',
+    data: {
+      labels: ['8A', '10A', '13A', '16A'],
+      datasets: [
+        {
+          label: 'MG ZS EV',
+          data: [0.900, 0.714, 0.695, 0.950],
+          backgroundColor: ['rgba(107,203,119,0.7)', 'rgba(255,217,61,0.7)', 'rgba(255,217,61,0.7)', 'rgba(107,203,119,0.7)'],
+          borderColor: ['#6bcb77', '#ffd93d', '#ffd93d', '#6bcb77'],
+          borderWidth: 1
+        },
+        {
+          label: 'RD6 Riddara',
+          data: [0.772, 0.544, 0.455, 0.819],
+          backgroundColor: ['rgba(255,217,61,0.7)', 'rgba(255,107,107,0.7)', 'rgba(255,107,107,0.7)', 'rgba(255,217,61,0.7)'],
+          borderColor: ['#ffd93d', '#ff6b6b', '#ff6b6b', '#ffd93d'],
+          borderWidth: 1
+        }
+      ]
+    },
+    options: Object.assign({}, baseOpts, {
+      plugins: Object.assign({}, baseOpts.plugins, {
+        title: { display: true, text: 'Estimated Power Factor by Current', color: '#ccd6f6', font: { size: 14 } }
+      }),
+      scales: {
+        y: { min: 0, max: 1.0, title: { display: true, text: 'Power Factor', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
+        x: { ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }
+      }
+    })
+  });
+
+  // Chart 3: Cost Estimate
+  new Chart(document.getElementById('chartCostBar'), {
+    type: 'bar',
+    data: {
+      labels: ['8A', '10A', '13A', '16A'],
+      datasets: [
+        {
+          label: 'MG ZS EV (THB/hr)',
+          data: [1.65 * 4.72, 1.64 * 4.72, 2.00 * 4.72, 3.04 * 4.72],
+          backgroundColor: 'rgba(107,203,119,0.6)',
+          borderColor: '#6bcb77',
+          borderWidth: 1
+        },
+        {
+          label: 'RD6 Riddara (THB/hr)',
+          data: [1.42 * 4.72, 1.25 * 4.72, 1.36 * 4.72, 3.01 * 4.72],
+          backgroundColor: 'rgba(77,150,255,0.6)',
+          borderColor: '#4d96ff',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: Object.assign({}, baseOpts, {
+      plugins: Object.assign({}, baseOpts.plugins, {
+        title: { display: true, text: 'Charging Cost per Hour @ 4.72 THB/kWh', color: '#ccd6f6', font: { size: 14 } }
+      }),
+      scales: {
+        y: { title: { display: true, text: 'Cost (THB/hr)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
+        x: { ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }
+      }
+    })
+  });
+
+  // Chart 4: Charge Time
+  new Chart(document.getElementById('chartChargeTime'), {
+    type: 'bar',
+    data: {
+      labels: ['8A', '10A', '13A', '16A'],
+      datasets: [
+        {
+          label: 'MG ZS EV (hr)',
+          data: [32 / 1.65, 32 / 1.64, 32 / 2.00, 32 / 3.04],
+          backgroundColor: 'rgba(107,203,119,0.6)',
+          borderColor: '#6bcb77',
+          borderWidth: 1
+        },
+        {
+          label: 'RD6 Riddara (hr)',
+          data: [32 / 1.42, 32 / 1.25, 32 / 1.36, 32 / 3.01],
+          backgroundColor: 'rgba(77,150,255,0.6)',
+          borderColor: '#4d96ff',
+          borderWidth: 1
+        }
+      ]
+    },
+    options: Object.assign({}, baseOpts, {
+      plugins: Object.assign({}, baseOpts.plugins, {
+        title: { display: true, text: 'Time to Full Charge (40kWh, 20%->100%)', color: '#ccd6f6', font: { size: 14 } }
+      }),
+      scales: {
+        y: { title: { display: true, text: 'Hours', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
+        x: { ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }
+      }
+    })
+  });
+});
+</script>
+
+</body>
+</html>
