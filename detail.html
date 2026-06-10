@@ -179,12 +179,18 @@
     animation: pulseGlow 2s ease-in-out;
   }
   .nav-link {
-    display: inline-block; padding: 10px 24px;
-    background: #16213e; border: 1px solid #2a2a4a; border-radius: 8px;
-    color: #00d4ff; text-decoration: none; font-size: 13px;
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    display: inline-block; padding: 16px 40px;
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    border: 2px solid #00d4ff; border-radius: 12px;
+    color: #00d4ff; text-decoration: none; font-size: 18px; font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s, box-shadow 0.2s;
   }
-  .nav-link:hover { background: #0f3460; border-color: #00d4ff; transform: translateY(-2px); }
+  .nav-link:hover {
+    background: linear-gradient(135deg, #16213e, #0f3460);
+    border-color: #00d4ff; transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,212,255,0.3);
+  }
   @media (max-width: 768px) {
     .chart-row { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -202,7 +208,7 @@
     &nbsp;|&nbsp; <span id="headerSource">Loading...</span>
   </div>
   <div style="display:flex; gap:12px; margin-top:15px; flex-wrap:wrap;">
-    <a href="index.html" class="nav-link" style="background:#0f3460; border-color:#00d4ff; font-size:15px; padding:12px 28px;">
+    <a href="index.html" class="nav-link">
       &#128196; กลับหน้าสรุปผลการวิจัย
     </a>
   </div>
