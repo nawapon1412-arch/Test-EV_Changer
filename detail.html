@@ -447,14 +447,14 @@ function loadData(fileName) {
 
       var t = [], p = [], tp = [], e = [], c = [], v = [], r = [], tr = [];
       filteredRows.forEach(function(row) {
-        t.push(parseFloat(row['Time_Min']));
-        v.push(parseFloat(row['Voltage(V)']));
-        c.push(parseFloat(row['Current(A)']));
-        r.push(parseFloat(row['Resistance(Ohm)']));
-        p.push(parseFloat(row['Power(kW)']));
-        tp.push(parseFloat(row['Temp(C)']));
-        e.push(parseFloat(row['Calculated_Energy(kWh)']));
-        tr.push(parseFloat(row['Tuya_Raw_Energy(kWh)']));
+        t.push(Math.round(parseFloat(row['Time_Min'])));
+        v.push(Math.round(parseFloat(row['Voltage(V)'])));
+        c.push(Math.round(parseFloat(row['Current(A)'])));
+        r.push(Math.round(parseFloat(row['Resistance(Ohm)'])));
+        p.push(Math.round(parseFloat(row['Power(kW)']) * 1000) / 1000);
+        tp.push(Math.round(parseFloat(row['Temp(C)'])));
+        e.push(Math.round(parseFloat(row['Calculated_Energy(kWh)']) * 10) / 10);
+        tr.push(Math.round(parseFloat(row['Tuya_Raw_Energy(kWh)']) * 10) / 10);
       });
 
       var totalPoints = t.length;
@@ -469,30 +469,30 @@ function loadData(fileName) {
       var durationMin = t[t.length - 1];
       var tuyaDelta = tr[tr.length - 1] - tr[0];
 
-      document.getElementById('statTotalEnergy').textContent = totalEnergy.toFixed(4);
-      document.getElementById('statTuyaDelta').textContent = tuyaDelta.toFixed(4);
-      document.getElementById('statPeakPower').textContent = peakPower.toFixed(3);
-      document.getElementById('statAvgPower').textContent = avgPower.toFixed(3);
-      document.getElementById('statTemp').textContent = peakTemp.toFixed(1) + '\u00B0C';
-      document.getElementById('statTempRise').textContent = 'Rise: +' + maxTempRise.toFixed(1) + '\u00B0C';
-      document.getElementById('statAvgVoltage').textContent = avgVoltage.toFixed(1);
-      document.getElementById('statAvgCurrent').textContent = avgCurrent.toFixed(2);
-      document.getElementById('statDuration').textContent = durationMin.toFixed(1);
+      document.getElementById('statTotalEnergy').textContent = Math.round(totalEnergy * 10) / 10;
+      document.getElementById('statTuyaDelta').textContent = Math.round(tuyaDelta * 10) / 10;
+      document.getElementById('statPeakPower').textContent = Math.round(peakPower * 1000) / 1000;
+      document.getElementById('statAvgPower').textContent = Math.round(avgPower * 1000) / 1000;
+      document.getElementById('statTemp').textContent = peakTemp + '\u00B0C';
+      document.getElementById('statTempRise').textContent = 'Rise: +' + Math.round(maxTempRise) + '\u00B0C';
+      document.getElementById('statAvgVoltage').textContent = Math.round(avgVoltage);
+      document.getElementById('statAvgCurrent').textContent = Math.round(avgCurrent);
+      document.getElementById('statDuration').textContent = Math.round(durationMin);
       document.getElementById('statSamples').textContent = 'min (' + totalPoints + ' samples)';
       document.getElementById('dataLogTitle').textContent = 'ข้อมูลดิบ (ทั้งหมด ' + totalPoints + ' แถว)';
 
       var tbody = '';
       for (var i = 0; i < totalPoints; i++) {
-        var tempRise = parseFloat(filteredRows[i]['Temp_Rise(C)']);
+        var tempRise = Math.round(parseFloat(filteredRows[i]['Temp_Rise(C)']));
         tbody += '<tr>' +
-          '<td>' + t[i].toFixed(2) + '</td>' +
+          '<td>' + t[i] + '</td>' +
           '<td>' + v[i] + '</td>' +
           '<td>' + c[i] + '</td>' +
           '<td>' + r[i] + '</td>' +
-          '<td>' + p[i].toFixed(3) + '</td>' +
+          '<td>' + Math.round(p[i] * 1000) / 1000 + '</td>' +
           '<td>' + tp[i] + '</td>' +
           '<td>+' + tempRise + '</td>' +
-          '<td>' + e[i].toFixed(4) + '</td>' +
+          '<td>' + Math.round(e[i] * 10) / 10 + '</td>' +
           '<td>' + tr[i] + '</td>' +
           '</tr>';
       }
@@ -542,7 +542,14 @@ function updateCharts(t, p, tp, e, c, v, r, tr) {
         bodyColor: '#ccd6f6',
         borderColor: '#2a2a4a',
         borderWidth: 1,
-        padding: 10
+        padding: 10,
+        callbacks: {
+          label: function(context) {
+            var label = context.dataset.label || '';
+            var value = context.parsed.y;
+            return label + ': ' + (Math.round(value * 10) / 10);
+          }
+        }
       }
     }
   };
