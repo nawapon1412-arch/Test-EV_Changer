@@ -86,12 +86,12 @@
   .action-card li { margin-bottom: 5px; }
 
   .nav-link {
-    display: inline-block; margin-top: 10px; padding: 10px 24px;
+    display: inline-block; padding: 10px 24px;
     background: #16213e; border: 1px solid #2a2a4a; border-radius: 8px;
     color: #00d4ff; text-decoration: none; font-size: 14px; font-weight: 600;
-    transition: background 0.2s, border-color 0.2s;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
   }
-  .nav-link:hover { background: #0f3460; border-color: #00d4ff; }
+  .nav-link:hover { background: #0f3460; border-color: #00d4ff; transform: translateY(-2px); }
 
   .footer { text-align: center; padding: 20px; color: #555; font-size: 12px; }
 
@@ -110,7 +110,11 @@
     |&nbsp; ช่วงเวลาเก็บข้อมูล: 19 พ.ค. - 27 พ.ค. 2569
     &nbsp;|&nbsp; 9 ครั้งการชาร์จ (ใช้ได้ 8 ครั้ง)
   </div>
-  <a href="detail.html" class="nav-link">&larr; ดูกราฟรายละเอียดแต่ละครั้ง</a>
+  <div style="display:flex; gap:12px; margin-top:15px; flex-wrap:wrap;">
+    <a href="detail.html" class="nav-link" style="background:#0f3460; border-color:#00d4ff; font-size:15px; padding:12px 28px;">
+      &#128202; ดูกราฟรายละเอียดแต่ละครั้ง
+    </a>
+  </div>
 </div>
 
 <div class="container">

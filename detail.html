@@ -179,12 +179,12 @@
     animation: pulseGlow 2s ease-in-out;
   }
   .nav-link {
-    display: inline-block; margin-top: 10px; padding: 8px 20px;
+    display: inline-block; padding: 10px 24px;
     background: #16213e; border: 1px solid #2a2a4a; border-radius: 8px;
     color: #00d4ff; text-decoration: none; font-size: 13px;
-    transition: background 0.2s, border-color 0.2s;
+    transition: background 0.2s, border-color 0.2s, transform 0.2s;
   }
-  .nav-link:hover { background: #0f3460; border-color: #00d4ff; }
+  .nav-link:hover { background: #0f3460; border-color: #00d4ff; transform: translateY(-2px); }
   @media (max-width: 768px) {
     .chart-row { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -201,7 +201,11 @@
     <span class="badge badge-real" id="headerBadge">REAL DATA</span>
     &nbsp;|&nbsp; <span id="headerSource">Loading...</span>
   </div>
-  <a href="index.html" class="nav-link" style="margin-top:10px; display:inline-block;">&#8592; กลับหน้าสรุปผลการวิจัย</a>
+  <div style="display:flex; gap:12px; margin-top:15px; flex-wrap:wrap;">
+    <a href="index.html" class="nav-link" style="background:#0f3460; border-color:#00d4ff; font-size:15px; padding:12px 28px;">
+      &#128196; กลับหน้าสรุปผลการวิจัย
+    </a>
+  </div>
 </div>
 
 <div class="container">
