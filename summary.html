@@ -1,42 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EV Charging Research Summary</title>
+<title>สรุปผลการวิจัยการชาร์จรถยนต์ไฟฟ้า</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #0f0f1a;
-    color: #e0e0e0;
-    min-height: 100vh;
+    background: #0f0f1a; color: #e0e0e0; min-height: 100vh;
   }
   .header {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-    padding: 30px 40px;
-    border-bottom: 3px solid #00d4ff;
-    animation: slideInLeft 0.8s ease-out;
+    padding: 30px 40px; border-bottom: 3px solid #00d4ff;
   }
-  .header h1 { font-size: 28px; color: #00d4ff; margin-bottom: 5px; }
+  .header h1 { font-size: 26px; color: #00d4ff; margin-bottom: 5px; }
   .header .subtitle { font-size: 14px; color: #8892b0; }
   .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
 
   .section {
     background: #1a1a2e; border: 1px solid #2a2a4a;
     border-radius: 12px; padding: 25px; margin-bottom: 25px;
-    opacity: 0; transform: translateY(20px);
-    transition: opacity 0.7s ease-out, transform 0.7s ease-out;
   }
-  .section.visible { opacity: 1; transform: translateY(0); }
   .section h2 {
     font-size: 20px; color: #00d4ff; margin-bottom: 15px;
     padding-bottom: 10px; border-bottom: 1px solid #2a2a4a;
   }
-  .section h3 {
-    font-size: 16px; color: #ccd6f6; margin: 15px 0 10px;
-  }
+  .section h3 { font-size: 16px; color: #ccd6f6; margin: 15px 0 10px; }
 
   table.data-table {
     width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px;
@@ -52,33 +43,20 @@
   table.data-table tr:hover td { background: #16213e; }
 
   .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 15px; margin-bottom: 20px;
   }
   .stat-card {
     background: linear-gradient(145deg, #1a1a2e, #16213e);
-    border: 1px solid #2a2a4a;
-    border-radius: 12px; padding: 20px; text-align: center;
-    transition: transform 0.2s, border-color 0.2s;
-    opacity: 0; animation: fadeInUp 0.6s ease-out forwards;
+    border: 1px solid #2a2a4a; border-radius: 12px;
+    padding: 20px; text-align: center; transition: transform 0.2s, border-color 0.2s;
   }
   .stat-card:hover { transform: translateY(-3px); border-color: #00d4ff; }
-  .stat-card .label {
-    font-size: 11px; text-transform: uppercase;
-    letter-spacing: 1.5px; color: #8892b0; margin-bottom: 8px;
-  }
+  .stat-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: #8892b0; margin-bottom: 8px; }
   .stat-card .value { font-size: 22px; font-weight: 700; color: #00d4ff; }
   .stat-card .unit { font-size: 12px; color: #8892b0; margin-top: 4px; }
-  .stat-card:nth-child(1) { animation-delay: 0.1s; }
-  .stat-card:nth-child(2) { animation-delay: 0.15s; }
-  .stat-card:nth-child(3) { animation-delay: 0.2s; }
-  .stat-card:nth-child(4) { animation-delay: 0.25s; }
 
-  .badge {
-    display: inline-block; padding: 3px 10px;
-    border-radius: 12px; font-size: 11px; font-weight: 600;
-  }
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
   .badge-mg { background: #6bcb7722; color: #6bcb77; border: 1px solid #6bcb7744; }
   .badge-rd6 { background: #4d96ff22; color: #4d96ff; border: 1px solid #4d96ff44; }
   .badge-ok { background: #6bcb7722; color: #6bcb77; border: 1px solid #6bcb7744; }
@@ -98,16 +76,25 @@
   .chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px; }
   .chart-wrapper { position: relative; height: 380px; }
 
+  .action-card {
+    background: linear-gradient(145deg, #0f3460, #16213e);
+    border: 2px solid #6bcb77; border-radius: 12px;
+    padding: 25px; margin-bottom: 20px;
+  }
+  .action-card h3 { color: #6bcb77; font-size: 18px; margin-bottom: 12px; }
+  .action-card ul { color: #ccd6f6; font-size: 14px; line-height: 2; padding-left: 20px; }
+  .action-card li { margin-bottom: 5px; }
+
+  .nav-link {
+    display: inline-block; margin-top: 10px; padding: 10px 24px;
+    background: #16213e; border: 1px solid #2a2a4a; border-radius: 8px;
+    color: #00d4ff; text-decoration: none; font-size: 14px; font-weight: 600;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .nav-link:hover { background: #0f3460; border-color: #00d4ff; }
+
   .footer { text-align: center; padding: 20px; color: #555; font-size: 12px; }
 
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes slideInLeft {
-    from { opacity: 0; transform: translateX(-40px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
   @media (max-width: 768px) {
     .chart-row { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -117,269 +104,96 @@
 <body>
 
 <div class="header">
-  <h1>EV Charging Research Summary</h1>
+  <h1>สรุปผลการวิจัยการชาร์จรถยนต์ไฟฟ้า</h1>
   <div class="subtitle">
-    All Sessions Combined &mdash; MG ZS EV &amp; RD6 Riddara &nbsp;
-    |&nbsp; Data Period: May 19 - May 27, 2026
-    &nbsp;|&nbsp; 9 Charging Sessions (8 usable)
+    รวมทุกครั้งการชาร์จ &mdash; MG ZS EV &amp; RD6 Riddara &nbsp;
+    |&nbsp; ช่วงเวลาเก็บข้อมูล: 19 พ.ค. - 27 พ.ค. 2569
+    &nbsp;|&nbsp; 9 ครั้งการชาร์จ (ใช้ได้ 8 ครั้ง)
   </div>
+  <a href="index.html" class="nav-link">&larr; กลับหน้ากราฟรายละเอียด</a>
 </div>
 
 <div class="container">
 
-  <!-- ===== OVERVIEW STATS ===== -->
-  <div class="section" id="overview">
-    <h2>Overview</h2>
+  <!-- ===== ภาพรวม ===== -->
+  <div class="section">
+    <h2>ภาพรวม</h2>
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="label">Total Sessions</div>
+        <div class="label">จำนวนครั้งทั้งหมด</div>
         <div class="value">8</div>
-        <div class="unit">charging sessions (60 min each)</div>
+        <div class="unit">ครั้งการชาร์จ (ครั้งละ 60 นาที)</div>
       </div>
       <div class="stat-card">
-        <div class="label">Current Levels Tested</div>
+        <div class="label">ระดับกระแสที่ทดสอบ</div>
         <div class="value">4</div>
         <div class="unit">8A, 10A, 13A, 16A</div>
       </div>
       <div class="stat-card">
-        <div class="label">Supply Voltage</div>
+        <div class="label">แรงดันไฟฟ้าจ่าย</div>
         <div class="value">230</div>
-        <div class="unit">V AC (household)</div>
+        <div class="unit">V AC (ไฟบ้าน)</div>
       </div>
       <div class="stat-card">
-        <div class="label">Data Points</div>
+        <div class="label">จุดข้อมูลทั้งหมด</div>
         <div class="value">~19,000</div>
-        <div class="unit">total readings collected</div>
+        <div class="unit">ค่าที่เก็บได้ทั้งหมด</div>
       </div>
     </div>
   </div>
 
-  <!-- ===== SESSION DETAILS ===== -->
-  <div class="section" id="sessions">
-    <h2>All Charging Sessions</h2>
-    <div class="table-container" style="max-height:none; border-radius:8px; border:1px solid #2a2a4a; overflow-x:auto;">
+  <!-- ===== รายการชาร์จทั้งหมด ===== -->
+  <div class="section">
+    <h2>รายการชาร์จทั้งหมด</h2>
+    <div style="border-radius:8px; border:1px solid #2a2a4a; overflow-x:auto;">
       <table class="data-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>Vehicle</th>
-            <th>Date</th>
-            <th>Current (A)</th>
-            <th>Avg Power (kW)</th>
-            <th>Calc Energy (kWh)</th>
-            <th>Tuya Delta (kWh)</th>
-            <th>Diff %</th>
-            <th>Est. Power Factor</th>
-            <th>Data Points</th>
+            <th>#</th><th>รถยนต์</th><th>วันที่</th><th>กระแส (A)</th>
+            <th>กำลังเฉลี่ย (kW)</th><th>พลังงานคำนวณ (kWh)</th>
+            <th>พลังงาน Tuya (kWh)</th><th>ส่วนต่าง %</th>
+            <th>ค่า Power Factor</th><th>จุดข้อมูล</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>1</td>
-            <td><span class="badge badge-mg">MG ZS EV</span></td>
-            <td>2026-05-27</td>
-            <td>8</td>
-            <td>1.840</td>
-            <td>1.8337</td>
-            <td>1.6500</td>
-            <td>10.0%</td>
-            <td><span class="badge badge-ok">0.900</span></td>
-            <td>119</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td><span class="badge badge-mg">MG ZS EV</span></td>
-            <td>2026-05-19</td>
-            <td>10</td>
-            <td>2.298</td>
-            <td>2.2968</td>
-            <td>1.6400</td>
-            <td>28.6%</td>
-            <td><span class="badge badge-warn">0.714</span></td>
-            <td>2,514</td>
-          </tr>
-          <tr>
-            <td>3</td>
-            <td><span class="badge badge-mg">MG ZS EV</span></td>
-            <td>2026-05-19</td>
-            <td>13</td>
-            <td>2.989</td>
-            <td>2.8780</td>
-            <td>2.0000</td>
-            <td>30.5%</td>
-            <td><span class="badge badge-warn">0.695</span></td>
-            <td>2,369</td>
-          </tr>
-          <tr>
-            <td>4</td>
-            <td><span class="badge badge-mg">MG ZS EV</span></td>
-            <td>2026-05-19</td>
-            <td>16</td>
-            <td>3.678</td>
-            <td>3.2011</td>
-            <td>3.0400</td>
-            <td>5.0%</td>
-            <td><span class="badge badge-ok">0.950</span></td>
-            <td>2,099</td>
-          </tr>
-          <tr>
-            <td>5</td>
-            <td><span class="badge badge-rd6">RD6 Riddara</span></td>
-            <td>2026-05-27</td>
-            <td>8</td>
-            <td>1.839</td>
-            <td>1.8387</td>
-            <td>1.4200</td>
-            <td>22.8%</td>
-            <td><span class="badge badge-warn">0.772</span></td>
-            <td>2,576</td>
-          </tr>
-          <tr>
-            <td>6</td>
-            <td><span class="badge badge-rd6">RD6 Riddara</span></td>
-            <td>2026-05-27</td>
-            <td>10</td>
-            <td>2.300</td>
-            <td>2.2996</td>
-            <td>1.2500</td>
-            <td>45.6%</td>
-            <td><span class="badge badge-alert">0.544</span></td>
-            <td>2,577</td>
-          </tr>
-          <tr>
-            <td>7</td>
-            <td><span class="badge badge-rd6">RD6 Riddara</span></td>
-            <td>2026-05-27</td>
-            <td>13</td>
-            <td>2.990</td>
-            <td>2.9890</td>
-            <td>1.3600</td>
-            <td>54.5%</td>
-            <td><span class="badge badge-alert">0.455</span></td>
-            <td>2,576</td>
-          </tr>
-          <tr>
-            <td>8</td>
-            <td><span class="badge badge-rd6">RD6 Riddara</span></td>
-            <td>2026-05-27</td>
-            <td>16</td>
-            <td>3.677</td>
-            <td>3.6765</td>
-            <td>3.0100</td>
-            <td>18.1%</td>
-            <td><span class="badge badge-warn">0.819</span></td>
-            <td>2,518</td>
-          </tr>
+          <tr><td>1</td><td><span class="badge badge-mg">MG ZS EV</span></td><td>27/05/2569</td><td>8</td><td>1.840</td><td>1.8337</td><td>1.6500</td><td>10.0%</td><td><span class="badge badge-ok">0.900</span></td><td>119</td></tr>
+          <tr><td>2</td><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05/2569</td><td>10</td><td>2.298</td><td>2.2968</td><td>1.6400</td><td>28.6%</td><td><span class="badge badge-warn">0.714</span></td><td>2,514</td></tr>
+          <tr><td>3</td><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05/2569</td><td>13</td><td>2.989</td><td>2.8780</td><td>2.0000</td><td>30.5%</td><td><span class="badge badge-warn">0.695</span></td><td>2,369</td></tr>
+          <tr><td>4</td><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05/2569</td><td>16</td><td>3.678</td><td>3.2011</td><td>3.0400</td><td>5.0%</td><td><span class="badge badge-ok">0.950</span></td><td>2,099</td></tr>
+          <tr><td>5</td><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05/2569</td><td>8</td><td>1.839</td><td>1.8387</td><td>1.4200</td><td>22.8%</td><td><span class="badge badge-warn">0.772</span></td><td>2,576</td></tr>
+          <tr><td>6</td><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05/2569</td><td>10</td><td>2.300</td><td>2.2996</td><td>1.2500</td><td>45.6%</td><td><span class="badge badge-alert">0.544</span></td><td>2,577</td></tr>
+          <tr><td>7</td><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05/2569</td><td>13</td><td>2.990</td><td>2.9890</td><td>1.3600</td><td>54.5%</td><td><span class="badge badge-alert">0.455</span></td><td>2,576</td></tr>
+          <tr><td>8</td><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05/2569</td><td>16</td><td>3.677</td><td>3.6765</td><td>3.0100</td><td>18.1%</td><td><span class="badge badge-warn">0.819</span></td><td>2,518</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <!-- ===== COMPARISON BY CURRENT ===== -->
-  <div class="section" id="comparison">
-    <h2>Comparison by Current Level</h2>
-
-    <!-- 8A -->
-    <h3>8A Sessions</h3>
-    <table class="data-table">
-      <thead>
-        <tr><th>Vehicle</th><th>Date</th><th>Avg Power (kW)</th><th>Calc Energy (kWh)</th><th>Tuya Delta (kWh)</th><th>PF</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><span class="badge badge-mg">MG ZS EV</span></td><td>27/05</td><td>1.840</td><td>1.8337</td><td>1.65</td><td>0.900</td></tr>
-        <tr><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05</td><td>1.839</td><td>1.8387</td><td>1.42</td><td>0.772</td></tr>
-      </tbody>
-    </table>
-
-    <!-- 10A -->
-    <h3>10A Sessions</h3>
-    <table class="data-table">
-      <thead>
-        <tr><th>Vehicle</th><th>Date</th><th>Avg Power (kW)</th><th>Calc Energy (kWh)</th><th>Tuya Delta (kWh)</th><th>PF</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05</td><td>2.298</td><td>2.2968</td><td>1.64</td><td>0.714</td></tr>
-        <tr><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05</td><td>2.300</td><td>2.2996</td><td>1.25</td><td>0.544</td></tr>
-      </tbody>
-    </table>
-
-    <!-- 13A -->
-    <h3>13A Sessions</h3>
-    <table class="data-table">
-      <thead>
-        <tr><th>Vehicle</th><th>Date</th><th>Avg Power (kW)</th><th>Calc Energy (kWh)</th><th>Tuya Delta (kWh)</th><th>PF</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05</td><td>2.989</td><td>2.8780</td><td>2.00</td><td>0.695</td></tr>
-        <tr><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05</td><td>2.990</td><td>2.9890</td><td>1.36</td><td>0.455</td></tr>
-      </tbody>
-    </table>
-
-    <!-- 16A -->
-    <h3>16A Sessions</h3>
-    <table class="data-table">
-      <thead>
-        <tr><th>Vehicle</th><th>Date</th><th>Avg Power (kW)</th><th>Calc Energy (kWh)</th><th>Tuya Delta (kWh)</th><th>PF</th></tr>
-      </thead>
-      <tbody>
-        <tr><td><span class="badge badge-mg">MG ZS EV</span></td><td>19/05</td><td>3.678</td><td>3.2011</td><td>3.04</td><td>0.950</td></tr>
-        <tr><td><span class="badge badge-rd6">RD6 Riddara</span></td><td>27/05</td><td>3.677</td><td>3.6765</td><td>3.01</td><td>0.819</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-  <!-- ===== ENERGY & COST ESTIMATES ===== -->
-  <div class="section" id="estimates">
-    <h2>Energy &amp; Cost Estimates (per hour of charging)</h2>
+  <!-- ===== ประมาณการค่าใช้จ่าย ===== -->
+  <div class="section">
+    <h2>ประมาณการพลังงานและค่าใช้จ่าย (ต่อชั่วโมงการชาร์จ)</h2>
     <table class="data-table">
       <thead>
         <tr>
-          <th>Current</th>
-          <th>Calc Energy (kWh/hr)</th>
-          <th>Tuya Energy (kWh/hr)</th>
-          <th>Cost @ 4.72 THB/kWh</th>
-          <th>Time to Full* (hr)</th>
+          <th>กระแส</th><th>พลังงานจริง (kWh/ชม.)</th>
+          <th>ค่าไฟ @ 4.72 บาท/kWh</th><th>เวลาชาร์จเต็ม* (ชม.)</th>
         </tr>
       </thead>
       <tbody>
-        <tr>
-          <td><strong>8A</strong></td>
-          <td>1.84</td>
-          <td>1.42 - 1.65</td>
-          <td>6.70 - 7.79 THB</td>
-          <td>~19 - 23 hr</td>
-        </tr>
-        <tr>
-          <td><strong>10A</strong></td>
-          <td>2.30</td>
-          <td>1.25 - 1.64</td>
-          <td>5.90 - 7.74 THB</td>
-          <td>~20 - 26 hr</td>
-        </tr>
-        <tr>
-          <td><strong>13A</strong></td>
-          <td>2.99</td>
-          <td>1.36 - 2.00</td>
-          <td>6.42 - 9.44 THB</td>
-          <td>~16 - 24 hr</td>
-        </tr>
-        <tr>
-          <td><strong>16A</strong></td>
-          <td>3.68</td>
-          <td>3.01 - 3.04</td>
-          <td>14.21 - 14.35 THB</td>
-          <td>~10.5 - 10.6 hr</td>
-        </tr>
+        <tr><td><strong>8A</strong></td><td>1.42 - 1.65</td><td>6.70 - 7.79 บาท</td><td>~19 - 23 ชม.</td></tr>
+        <tr><td><strong>10A</strong></td><td>1.25 - 1.64</td><td>5.90 - 7.74 บาท</td><td>~20 - 26 ชม.</td></tr>
+        <tr><td><strong>13A</strong></td><td>1.36 - 2.00</td><td>6.42 - 9.44 บาท</td><td>~16 - 24 ชม.</td></tr>
+        <tr><td><strong>16A</strong></td><td>3.01 - 3.04</td><td>14.21 - 14.35 บาท</td><td>~10.5 - 10.6 ชม.</td></tr>
       </tbody>
     </table>
     <div style="margin-top:10px; font-size:12px; color:#8892b0;">
-      * Time to Full = 40 kWh battery (20% &rarr; 100% = 32 kWh needed), based on Tuya real energy rate.
+      * เวลาชาร์จเต็ม = แบตเตอรี่ 40 kWh (20% &rarr; 100% = ต้องชาร์จ 32 kWh) คำนวณจากอัตราพลังงานจริงของ Tuya
     </div>
   </div>
 
-  <!-- ===== CHARTS ===== -->
-  <div class="section" id="charts">
-    <h2>Visual Comparison</h2>
+  <!-- ===== กราฟ ===== -->
+  <div class="section">
+    <h2>กราฟเปรียบเทียบ</h2>
     <div class="chart-row">
       <div class="chart-wrapper"><canvas id="chartEnergyBar"></canvas></div>
       <div class="chart-wrapper"><canvas id="chartPFBar"></canvas></div>
@@ -390,130 +204,173 @@
     </div>
   </div>
 
-  <!-- ===== TUYA CUMULATIVE ===== -->
-  <div class="section" id="tuyaCumulative">
-    <h2>Tuya Smart Plug Cumulative Energy (27/05/2026)</h2>
+  <!-- ===== พลังงานสะสม Tuya ===== -->
+  <div class="section">
+    <h2>พลังงานสะสม Tuya Smart Plug (27/05/2569)</h2>
     <p style="color:#8892b0; margin-bottom:15px;">
-      All RD6 Riddara sessions on the same day show continuous Tuya meter readings:
+      รวมทุกครั้งของ RD6 Riddara ในวันเดียวกัน แสดงค่ามิเตอร์สะสมของ Tuya:
     </p>
     <table class="data-table">
       <thead>
-        <tr><th>Session</th><th>Current</th><th>Tuya Start (kWh)</th><th>Tuya End (kWh)</th><th>Delta (kWh)</th></tr>
+        <tr><th>ครั้งที่</th><th>กระแส</th><th>Tuya เริ่ม (kWh)</th><th>Tuya จบ (kWh)</th><th>ส่วนต่าง (kWh)</th></tr>
       </thead>
       <tbody>
-        <tr><td>Session 4</td><td>8A</td><td>43.52</td><td>44.94</td><td>1.42</td></tr>
-        <tr><td>Session 5</td><td>10A</td><td>45.41</td><td>46.66</td><td>1.25</td></tr>
-        <tr><td>Session 6</td><td>13A</td><td>47.51</td><td>48.87</td><td>1.36</td></tr>
-        <tr><td>Session 7</td><td>16A</td><td>50.15</td><td>53.16</td><td>3.01</td></tr>
+        <tr><td>ครั้งที่ 4</td><td>8A</td><td>43.52</td><td>44.94</td><td>1.42</td></tr>
+        <tr><td>ครั้งที่ 5</td><td>10A</td><td>45.41</td><td>46.66</td><td>1.25</td></tr>
+        <tr><td>ครั้งที่ 6</td><td>13A</td><td>47.51</td><td>48.87</td><td>1.36</td></tr>
+        <tr><td>ครั้งที่ 7</td><td>16A</td><td>50.15</td><td>53.16</td><td>3.01</td></tr>
       </tbody>
       <tfoot>
         <tr style="font-weight:bold; color:#00d4ff;">
-          <td colspan="4">Total Delta (27/05/2026)</td><td>9.64 kWh</td>
+          <td colspan="4">รวมพลังงานทั้งหมด (27/05/2569)</td><td>9.64 kWh</td>
         </tr>
       </tfoot>
     </table>
     <div class="findings-box" style="margin-top:15px;">
-      <strong>Note:</strong> Gaps between sessions (e.g., 44.94 &rarr; 45.41 = <strong>0.47 kWh</strong>) indicate energy used during setup/changeover between tests.
+      <strong>หมายเหตุ:</strong> ช่วงว่างระหว่างครั้ง (เช่น 44.94 &rarr; 45.41 = <strong>0.47 kWh</strong>) คือพลังงานที่ใช้ระหว่างเปลี่ยนครั้งการชาร์จ
     </div>
   </div>
 
-  <!-- ===== KEY FINDINGS ===== -->
-  <div class="section" id="findings">
-    <h2>Key Findings</h2>
+  <!-- ===== ผลการวิจัยที่สำคัญ ===== -->
+  <div class="section">
+    <h2>ผลการวิจัยที่สำคัญ</h2>
 
-    <h3>1. Calculated Energy (V&times;I) Always Exceeds Tuya Reading</h3>
+    <h3>1. พลังงานคำนวณ (V&times;I) มากกว่าค่า Tuya เสมอ</h3>
     <div class="findings-box">
-      The <strong>Calculated Energy</strong> uses <code>P = V &times; I</code> (Apparent Power in VA) without Power Factor correction.<br>
-      The <strong>Tuya Smart Plug</strong> measures <strong>Real Power (W)</strong> with built-in PF compensation.<br>
-      This means Calculated Energy is always <span class="warn">higher</span> than actual energy consumed.
+      <strong>พลังงานคำนวณ</strong>ใช้สูตร <code>P = V &times; I</code> (Apparent Power หรือ VA) โดยไม่มีการแก้ค่า Power Factor<br>
+      <strong>Tuya Smart Plug</strong>วัด <strong>Real Power (W)</strong> โดยมีการชดเชย Power Factor ในตัว<br>
+      ดังนั้นพลังงานคำนวณจะ <span class="warn">สูงกว่า</span> พลังงานจริงที่ใช้ไปเสมอ
     </div>
 
-    <h3>2. Power Factor Varies Significantly</h3>
+    <h3>2. ค่า Power Factor แตกต่างกันมาก</h3>
     <div class="findings-box">
-      <strong>Reliable readings (PF 0.82 - 0.95):</strong>
+      <strong>ค่าที่น่าเชื่อถือ (PF 0.82 - 0.95):</strong>
       <ul>
-        <li>MG ZS EV 16A &rarr; PF = <span class="good">0.950</span> (best accuracy)</li>
-        <li>MG ZS EV 8A &rarr; PF = <span class="good">0.900</span> (typical EV charger)</li>
+        <li>MG ZS EV 16A &rarr; PF = <span class="good">0.950</span> (แม่นที่สุด)</li>
+        <li>MG ZS EV 8A &rarr; PF = <span class="good">0.900</span> (ค่าปกติของเครื่องชาร์จ EV)</li>
         <li>RD6 Riddara 16A &rarr; PF = <span class="good">0.819</span></li>
       </ul>
-      <strong>Suspicious readings (PF &lt; 0.72):</strong>
+      <strong>ค่าที่น่าสงสัย (PF &lt; 0.72):</strong>
       <ul>
-        <li>RD6 Riddara 10A &rarr; PF = <span class="alert">0.544</span> (likely Tuya reading error)</li>
-        <li>RD6 Riddara 13A &rarr; PF = <span class="alert">0.455</span> (likely Tuya reading error)</li>
+        <li>RD6 Riddara 10A &rarr; PF = <span class="alert">0.544</span> (น่าจะเกิดจากความคลาดเคลื่อนของ Tuya)</li>
+        <li>RD6 Riddara 13A &rarr; PF = <span class="alert">0.455</span> (น่าจะเกิดจากความคลาดเคลื่อนของ Tuya)</li>
         <li>MG ZS EV 10A &rarr; PF = <span class="warn">0.714</span></li>
         <li>MG ZS EV 13A &rarr; PF = <span class="warn">0.695</span></li>
       </ul>
-      Normal EV charger PF should be <strong>0.85 - 0.95</strong>. Values below 0.7 suggest
-      the Tuya meter may have low resolution (0.01 kWh steps) or update lag at lower currents.
+      ค่า Power Factor ปกติของเครื่องชาร์จ EV ควรอยู่ที่ <strong>0.85 - 0.95</strong> ค่าที่ต่ำกว่า 0.7 บ่งชี้ว่า
+      มิเตอร์ Tuya อาจมีความละเอียดต่ำ (เพิ่มทีละ 0.01 kWh) หรืออัปเดตช้าเมื่อกระแสต่ำ
     </div>
 
-    <h3>3. 16A is the Most Efficient &amp; Reliable</h3>
+    <h3>3. 16A มีประสิทธิภาพและน่าเชื่อถือที่สุด</h3>
     <div class="findings-box">
       <ul>
-        <li>MG ZS EV at 16A: <span class="good">PF = 0.950</span>, only 5% difference between Calc and Tuya</li>
-        <li>RD6 Riddara at 16A: <span class="good">PF = 0.819</span>, 18% difference</li>
-        <li>16A delivers <strong>~3.0 kWh/hr real energy</strong> &mdash; about <strong>2x more</strong> than 8A</li>
-        <li>At 16A, charging a 40 kWh battery from 20% to 100% takes only <strong>~10.6 hours</strong></li>
+        <li>MG ZS EV ที่ 16A: <span class="good">PF = 0.950</span> ต่างจาก Tuya แค่ 5%</li>
+        <li>RD6 Riddara ที่ 16A: <span class="good">PF = 0.819</span> ต่าง 18%</li>
+        <li>16A จ่ายพลังงานจริง <strong>~3.0 kWh/ชม.</strong> &mdash; มากกว่า 8A ประมาณ <strong>2 เท่า</strong></li>
+        <li>ที่ 16A ชาร์จแบตเตอรี่ 40 kWh จาก 20% เป็น 100% ใช้เวลาเพียง <strong>~10.6 ชม.</strong></li>
       </ul>
     </div>
 
-    <h3>4. 10A and 13A Show Anomalous Tuya Data (RD6)</h3>
+    <h3>4. ข้อมูล Tuya ที่ 10A และ 13A ผิดปกติ (RD6)</h3>
     <div class="findings-box">
-      For RD6 Riddara sessions at 10A and 13A, the Tuya Delta is suspiciously low:
+      สำหรับ RD6 Riddara ที่ 10A และ 13A ค่า Tuya Delta ต่ำผิดปกติ:
       <ul>
-        <li>10A: Tuya reported only <strong>1.25 kWh</strong> over 60 min, but calculated is <strong>2.30 kWh</strong></li>
-        <li>13A: Tuya reported only <strong>1.36 kWh</strong> over 60 min, but calculated is <strong>2.99 kWh</strong></li>
+        <li>10A: Tuya รายงานเพียง <strong>1.25 kWh</strong> ใน 60 นาที แต่คำนวณได้ <strong>2.30 kWh</strong></li>
+        <li>13A: Tuya รายงานเพียง <strong>1.36 kWh</strong> ใน 60 นาที แต่คำนวณได้ <strong>2.99 kWh</strong></li>
       </ul>
-      <span class="alert">This is likely a Tuya Smart Plug measurement issue</span> &mdash;
-      at lower currents the plug may not sample fast enough or the 0.01 kWh resolution causes significant rounding errors over short intervals.
-      <strong>The Calculated Energy values at these current levels are more reliable.</strong>
+      <span class="alert">น่าจะเป็นปัญหาการวัดของ Tuya Smart Plug</span> &mdash;
+      เมื่อกระแสต่ำ ปลั๊กอาจสุ่มตัวอย่างไม่ถี่พอ หรือความละเอียด 0.01 kWh ทำให้เกิดการปัดเศษที่ผิดเพี้ยนมาก
     </div>
 
-    <h3>5. Cost Efficiency</h3>
+    <h3>5. ประสิทธิภาพด้านค่าใช้จ่าย</h3>
     <div class="findings-box">
-      At Thailand's off-peak rate of <strong>4.72 THB/kWh</strong>:
+      อัตราค่าไฟนอกเวลา Peak ที่ <strong>4.72 บาท/kWh</strong>:
       <ul>
-        <li>8A: <strong>~7 THB/hr</strong> (slowest, ~23 hr to full charge)</li>
-        <li>10A: <strong>~6-8 THB/hr</strong> (unreliable Tuya data)</li>
-        <li>13A: <strong>~6-9 THB/hr</strong> (unreliable Tuya data)</li>
-        <li>16A: <strong>~14 THB/hr</strong> (best value &mdash; charges in ~10.6 hr, PF highest)</li>
+        <li>8A: <strong>~7 บาท/ชม.</strong> (ช้าที่สุด ใช้เวลา ~23 ชม. ชาร์จเต็ม)</li>
+        <li>10A: <strong>~6-8 บาท/ชม.</strong> (ข้อมูล Tuya ไม่น่าเชื่อถือ)</li>
+        <li>13A: <strong>~6-9 บาท/ชม.</strong> (ข้อมูล Tuya ไม่น่าเชื่อถือ)</li>
+        <li>16A: <strong>~14 บาท/ชม.</strong> (คุ้มค่าที่สุด &mdash; ชาร์จเต็มใน ~10.6 ชม. ค่า PF สูงสุด)</li>
       </ul>
-      <strong>Recommendation:</strong> Charge at <span class="good">16A during off-peak hours</span> for best efficiency and shortest charge time.
     </div>
   </div>
 
-  <!-- ===== FORMULA REFERENCE ===== -->
-  <div class="section" id="formulas">
-    <h2>Formula Reference</h2>
+  <!-- ===== เอาข้อมูลไปทำอะไรได้บ้าง ===== -->
+  <div class="section">
+    <h2>เอาข้อมูลนี้ไปใช้ทำอะไรได้บ้าง</h2>
+
+    <div class="action-card">
+      <h3>สำหรับเจ้าของรถ EV</h3>
+      <ul>
+        <li><strong>วางแผนเวลาชาร์จ:</strong> ชาร์จที่ 16A ในช่วง Off-Peak (23:00 - 09:00 น.) ใช้เวลา ~10.6 ชม. ค่าไฟประหยัดสุด</li>
+        <li><strong>ประมาณค่าชาร์จเต็ม:</strong> แบต 40 kWh ชาร์จจาก 20% &rarr; 100% ใช้พลังงาน ~32 kWh ค่าไฟประมาณ <strong>~151 บาท</strong> (32 &times; 4.72)</li>
+        <li><strong>เปรียบเทียบกับราคาสถานีชาร์จ:</strong> สถานีชาร์จสาธารณะเริ่มต้น ~5-8 บาท/kWh ชาร์จที่บ้านเพียง 4.72 บาท/kWh <strong>ประหยัดกว่า ~40-70%</strong></li>
+        <li><strong>เลือกกระแสที่เหมาะสม:</strong> ถ้าสายไฟที่บ้านรองรับ 16A ไหว ให้ชาร์จที่ 16A เสมอ เพื่อความเร็วและความแม่นยำของมิเตอร์สูงสุด</li>
+      </ul>
+    </div>
+
+    <div class="action-card">
+      <h3>สำหรับการวิจัยและพัฒนา</h3>
+      <ul>
+        <li><strong>ศึกษา Power Factor ของเครื่องชาร์จ:</strong> ข้อมูลแสดงให้เห็นว่า PF แปรผันตามระดับกระแส สามารถนำไปทำนายประสิทธิภาพการชาร์จได้</li>
+        <li><strong>ประเมินความแม่นยำของ Smart Plug:</strong> Tuya Smart Plug เหมาะสำหรับวัดที่กระแสสูง (16A) แต่ไม่เหมาะสำหรับกระแสต่ำ (8A-13A) เนื่องจากความละเอียดต่ำ</li>
+        <li><strong>เปรียบเทียบระบบชาร์จ 2 รุ่น:</strong> MG ZS EV และ RD6 Riddara มีพฤติกรรมการชาร์จต่างกัน สะท้อนถึงการออกแบบระบบ OBC (On-Board Charger) ที่ต่างกัน</li>
+        <li><strong>ออกแบบระบบ Monitoring:</strong> ข้อมูลที่เก็บได้ ~19,000 จุด สามารถนำไปพัฒนาระบบติดตามการชาร์จแบบ Real-time ได้</li>
+      </ul>
+    </div>
+
+    <div class="action-card">
+      <h3>สำหรับการศึกษาและแบ่งปันความรู้</h3>
+      <ul>
+        <li><strong>ทำคอนเทนต์ยูทูป/บล็อก:</strong> เปรียบเทียบค่าชาร์จจริง vs คำนวณ ให้คนทั่วไปเข้าใจการชาร์จ EV ที่บ้าน</li>
+        <li><strong>สอนวิชาไฟฟ้า:</strong> ใช้เป็นกรณีศึกษาเรื่อง Power Factor, Apparent Power vs Real Power, การวัดพลังงานไฟฟ้า</li>
+        <li><strong>เปรียบเทียบกับรถยนต์สันดาป:</strong> ค่าน้ำมัน ~35 บาท/ลิตร วิ่งได้ ~12 กม./ลิตร = ~2.92 บาท/กม. | EV ชาร์จบ้าน ~4.72 บาท/kWh วิ่งได้ ~6 กม./kWh = ~0.79 บาท/กม. <strong>EV ประหยัดกว่า ~73%</strong></li>
+      </ul>
+    </div>
+
+    <div class="action-card">
+      <h3>สำหรับการตัดสินใจซื้อรถ EV</h3>
+      <ul>
+        <li><strong>คำนวณค่าใช้จ่ายรายเดือน:</strong> ถ้าขับ 1,000 กม./เดือน ใช้พลังงาน ~167 kWh = <strong>~788 บาท/เดือน</strong> (เทียบกับรถสันดาป ~2,920 บาท/เดือน)</li>
+        <li><strong>ประเมินเวลาชาร์จ:</strong> ชาร์จที่บ้าน 16A ใช้เวลา ~10.6 ชม. ชาร์จข้ามคืน ตื่นมารถเต็ม</li>
+        <li><strong>ตรวจสอบสายไฟบ้าน:</strong> ต้องมีสายไฟและเบรกเกอร์ที่รองรับ 16A (ขนาดสายอย่างน้อย 2.5 ตร.มม.)</li>
+      </ul>
+    </div>
+
+    <div class="action-card">
+      <h3>สรุปข้อค้นพบทั้งหมด</h3>
+      <ul>
+        <li>ทดสอบ <strong>2 รถยนต์ไฟฟ้า</strong> (MG ZS EV, RD6 Riddara) ที่ <strong>4 ระดับกระแส</strong> (8A, 10A, 13A, 16A)</li>
+        <li>ใช้ <strong>Tuya Smart Plug</strong> วัดพลังงานจริง เปรียบเทียบกับการคำนวณจากแรงดันและกระแส</li>
+        <li>ที่ <strong>16A</strong> ค่า Power Factor สูงสุด (<span class="good">0.819 - 0.950</span>) ข้อมูลค่อนข้างแม่นยำ</li>
+        <li>ที่ <strong>10A, 13A</strong> ค่า Power Factor ต่ำผิดปกติ (<span class="alert">0.455 - 0.714</span>) น่าจะเกิดจากข้อจำกัดของ Tuya</li>
+        <li><strong>แนะนำชาร์จที่ 16A</strong> ระหว่างเวลา Off-Peak เพื่อความคุ้มค่าและรวดเร็วที่สุด</li>
+        <li>ค่าชาร์จเต็ม (20% &rarr; 100%) ประมาณ <strong>~151 บาท</strong> (32 kWh &times; 4.72 บาท) ที่ 16A</li>
+        <li>ชาร์จที่บ้าน <strong>ประหยัดกว่าสถานีชาร์จสาธารณะ 40-70%</strong> และ <strong>ประหยัดกว่ารถสันดาป ~73%</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== สูตรที่ใช้คำนวณ ===== -->
+  <div class="section">
+    <h2>สูตรที่ใช้คำนวณ</h2>
     <div class="findings-box" style="border-left-color: #ffd93d;">
       <code>
         Apparent Power (VA)&nbsp;&nbsp;&nbsp;= V &times; I<br>
         Real Power (W)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= V &times; I &times; PF<br>
-        Energy (kWh)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= &Sigma; (P &times; &Delta;t / 3600)<br>
-        Calculated Energy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= &Sigma; (V &times; I / 1000 &times; &Delta;t / 3600)<br>
-        Tuya Raw Energy&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= DPS point '1' / 100 (cumulative, normalized to 0)<br>
-        Power Factor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= Tuya Delta / Calculated Energy<br>
+        พลังงาน (kWh)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= &Sigma; (P &times; &Delta;t / 3600)<br>
+        พลังงานคำนวณ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= &Sigma; (V &times; I / 1000 &times; &Delta;t / 3600)<br>
+        พลังงาน Tuya&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= DPS point '1' / 100 (ค่าสะสม, ปรับให้เริ่มที่ 0)<br>
+        Power Factor&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;= ส่วนต่าง Tuya / พลังงานคำนวณ<br>
       </code>
     </div>
   </div>
 
 </div>
 
-<div class="footer">EV Charging Research Summary | Generated: June 10, 2026 | MG ZS EV &amp; RD6 Riddara</div>
+<div class="footer">สรุปผลการวิจัยการชาร์จรถยนต์ไฟฟ้า | สร้างเมื่อ: 10 มิ.ย. 2569 | MG ZS EV &amp; RD6 Riddara</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  var sections = document.querySelectorAll('.section');
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.05 });
-  sections.forEach(function(s) { observer.observe(s); });
-
   Chart.defaults.color = '#8892b0';
   Chart.defaults.borderColor = '#2a2a4a';
 
@@ -534,80 +391,40 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  // Chart 1: Energy Comparison Bar
   new Chart(document.getElementById('chartEnergyBar'), {
     type: 'bar',
     data: {
       labels: ['8A', '10A', '13A', '16A'],
       datasets: [
-        {
-          label: 'MG ZS EV - Calc (kWh)',
-          data: [1.8337, 2.2968, 2.8780, 3.2011],
-          backgroundColor: 'rgba(107,203,119,0.7)',
-          borderColor: '#6bcb77',
-          borderWidth: 1
-        },
-        {
-          label: 'MG ZS EV - Tuya (kWh)',
-          data: [1.65, 1.64, 2.00, 3.04],
-          backgroundColor: 'rgba(107,203,119,0.3)',
-          borderColor: '#6bcb77',
-          borderWidth: 1,
-          borderDash: [5, 3]
-        },
-        {
-          label: 'RD6 - Calc (kWh)',
-          data: [1.8387, 2.2996, 2.9890, 3.6765],
-          backgroundColor: 'rgba(77,150,255,0.7)',
-          borderColor: '#4d96ff',
-          borderWidth: 1
-        },
-        {
-          label: 'RD6 - Tuya (kWh)',
-          data: [1.42, 1.25, 1.36, 3.01],
-          backgroundColor: 'rgba(77,150,255,0.3)',
-          borderColor: '#4d96ff',
-          borderWidth: 1,
-          borderDash: [5, 3]
-        }
+        { label: 'MG ZS EV - คำนวณ (kWh)', data: [1.8337, 2.2968, 2.8780, 3.2011], backgroundColor: 'rgba(107,203,119,0.7)', borderColor: '#6bcb77', borderWidth: 1 },
+        { label: 'MG ZS EV - Tuya (kWh)', data: [1.65, 1.64, 2.00, 3.04], backgroundColor: 'rgba(107,203,119,0.3)', borderColor: '#6bcb77', borderWidth: 1, borderDash: [5, 3] },
+        { label: 'RD6 - คำนวณ (kWh)', data: [1.8387, 2.2996, 2.9890, 3.6765], backgroundColor: 'rgba(77,150,255,0.7)', borderColor: '#4d96ff', borderWidth: 1 },
+        { label: 'RD6 - Tuya (kWh)', data: [1.42, 1.25, 1.36, 3.01], backgroundColor: 'rgba(77,150,255,0.3)', borderColor: '#4d96ff', borderWidth: 1, borderDash: [5, 3] }
       ]
     },
     options: Object.assign({}, baseOpts, {
       plugins: Object.assign({}, baseOpts.plugins, {
-        title: { display: true, text: 'Energy per 1-Hour Session (kWh)', color: '#ccd6f6', font: { size: 14 } }
+        title: { display: true, text: 'พลังงานต่อ 1 ชั่วโมง (kWh)', color: '#ccd6f6', font: { size: 14 } }
       }),
       scales: {
-        y: { title: { display: true, text: 'Energy (kWh)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
+        y: { title: { display: true, text: 'พลังงาน (kWh)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
         x: { ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }
       }
     })
   });
 
-  // Chart 2: Power Factor Bar
   new Chart(document.getElementById('chartPFBar'), {
     type: 'bar',
     data: {
       labels: ['8A', '10A', '13A', '16A'],
       datasets: [
-        {
-          label: 'MG ZS EV',
-          data: [0.900, 0.714, 0.695, 0.950],
-          backgroundColor: ['rgba(107,203,119,0.7)', 'rgba(255,217,61,0.7)', 'rgba(255,217,61,0.7)', 'rgba(107,203,119,0.7)'],
-          borderColor: ['#6bcb77', '#ffd93d', '#ffd93d', '#6bcb77'],
-          borderWidth: 1
-        },
-        {
-          label: 'RD6 Riddara',
-          data: [0.772, 0.544, 0.455, 0.819],
-          backgroundColor: ['rgba(255,217,61,0.7)', 'rgba(255,107,107,0.7)', 'rgba(255,107,107,0.7)', 'rgba(255,217,61,0.7)'],
-          borderColor: ['#ffd93d', '#ff6b6b', '#ff6b6b', '#ffd93d'],
-          borderWidth: 1
-        }
+        { label: 'MG ZS EV', data: [0.900, 0.714, 0.695, 0.950], backgroundColor: ['rgba(107,203,119,0.7)', 'rgba(255,217,61,0.7)', 'rgba(255,217,61,0.7)', 'rgba(107,203,119,0.7)'], borderColor: ['#6bcb77', '#ffd93d', '#ffd93d', '#6bcb77'], borderWidth: 1 },
+        { label: 'RD6 Riddara', data: [0.772, 0.544, 0.455, 0.819], backgroundColor: ['rgba(255,217,61,0.7)', 'rgba(255,107,107,0.7)', 'rgba(255,107,107,0.7)', 'rgba(255,217,61,0.7)'], borderColor: ['#ffd93d', '#ff6b6b', '#ff6b6b', '#ffd93d'], borderWidth: 1 }
       ]
     },
     options: Object.assign({}, baseOpts, {
       plugins: Object.assign({}, baseOpts.plugins, {
-        title: { display: true, text: 'Estimated Power Factor by Current', color: '#ccd6f6', font: { size: 14 } }
+        title: { display: true, text: 'ค่า Power Factor โดยประมาณตามระดับกระแส', color: '#ccd6f6', font: { size: 14 } }
       }),
       scales: {
         y: { min: 0, max: 1.0, title: { display: true, text: 'Power Factor', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
@@ -616,67 +433,41 @@ document.addEventListener('DOMContentLoaded', function() {
     })
   });
 
-  // Chart 3: Cost Estimate
   new Chart(document.getElementById('chartCostBar'), {
     type: 'bar',
     data: {
       labels: ['8A', '10A', '13A', '16A'],
       datasets: [
-        {
-          label: 'MG ZS EV (THB/hr)',
-          data: [1.65 * 4.72, 1.64 * 4.72, 2.00 * 4.72, 3.04 * 4.72],
-          backgroundColor: 'rgba(107,203,119,0.6)',
-          borderColor: '#6bcb77',
-          borderWidth: 1
-        },
-        {
-          label: 'RD6 Riddara (THB/hr)',
-          data: [1.42 * 4.72, 1.25 * 4.72, 1.36 * 4.72, 3.01 * 4.72],
-          backgroundColor: 'rgba(77,150,255,0.6)',
-          borderColor: '#4d96ff',
-          borderWidth: 1
-        }
+        { label: 'MG ZS EV (บาท/ชม.)', data: [1.65 * 4.72, 1.64 * 4.72, 2.00 * 4.72, 3.04 * 4.72], backgroundColor: 'rgba(107,203,119,0.6)', borderColor: '#6bcb77', borderWidth: 1 },
+        { label: 'RD6 Riddara (บาท/ชม.)', data: [1.42 * 4.72, 1.25 * 4.72, 1.36 * 4.72, 3.01 * 4.72], backgroundColor: 'rgba(77,150,255,0.6)', borderColor: '#4d96ff', borderWidth: 1 }
       ]
     },
     options: Object.assign({}, baseOpts, {
       plugins: Object.assign({}, baseOpts.plugins, {
-        title: { display: true, text: 'Charging Cost per Hour @ 4.72 THB/kWh', color: '#ccd6f6', font: { size: 14 } }
+        title: { display: true, text: 'ค่าชาร์จต่อชั่วโมง @ 4.72 บาท/kWh', color: '#ccd6f6', font: { size: 14 } }
       }),
       scales: {
-        y: { title: { display: true, text: 'Cost (THB/hr)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
+        y: { title: { display: true, text: 'ค่าใช้จ่าย (บาท/ชม.)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
         x: { ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }
       }
     })
   });
 
-  // Chart 4: Charge Time
   new Chart(document.getElementById('chartChargeTime'), {
     type: 'bar',
     data: {
       labels: ['8A', '10A', '13A', '16A'],
       datasets: [
-        {
-          label: 'MG ZS EV (hr)',
-          data: [32 / 1.65, 32 / 1.64, 32 / 2.00, 32 / 3.04],
-          backgroundColor: 'rgba(107,203,119,0.6)',
-          borderColor: '#6bcb77',
-          borderWidth: 1
-        },
-        {
-          label: 'RD6 Riddara (hr)',
-          data: [32 / 1.42, 32 / 1.25, 32 / 1.36, 32 / 3.01],
-          backgroundColor: 'rgba(77,150,255,0.6)',
-          borderColor: '#4d96ff',
-          borderWidth: 1
-        }
+        { label: 'MG ZS EV (ชม.)', data: [32 / 1.65, 32 / 1.64, 32 / 2.00, 32 / 3.04], backgroundColor: 'rgba(107,203,119,0.6)', borderColor: '#6bcb77', borderWidth: 1 },
+        { label: 'RD6 Riddara (ชม.)', data: [32 / 1.42, 32 / 1.25, 32 / 1.36, 32 / 3.01], backgroundColor: 'rgba(77,150,255,0.6)', borderColor: '#4d96ff', borderWidth: 1 }
       ]
     },
     options: Object.assign({}, baseOpts, {
       plugins: Object.assign({}, baseOpts.plugins, {
-        title: { display: true, text: 'Time to Full Charge (40kWh, 20%->100%)', color: '#ccd6f6', font: { size: 14 } }
+        title: { display: true, text: 'เวลาชาร์จเต็ม (40kWh, 20%->100%)', color: '#ccd6f6', font: { size: 14 } }
       }),
       scales: {
-        y: { title: { display: true, text: 'Hours', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
+        y: { title: { display: true, text: 'ชั่วโมง', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
         x: { ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }
       }
     })
