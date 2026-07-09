@@ -217,6 +217,11 @@
 <div class="container">
 
   <div class="file-selector-wrapper">
+    <label>Power Source:</label>
+    <select id="sourceSelector">
+      <option value="home">Home (230V AC)</option>
+      <option value="generator">Generator</option>
+    </select>
     <label>Select Car:</label>
     <select id="carSelector">
       <option value="mg">MG ZS EV</option>
@@ -372,18 +377,34 @@
 var charts = {};
 
 var CSV_FILES = {
-  mg: [
-    { file: 'Research_Data_Real.csv', label: '8A', type: 'real' },
-    { file: 'Research_Data_1Hr_20260519_114613.csv', label: '10A', type: 'real' },
-    { file: 'Research_Data_1Hr_20260519_130459.csv', label: '13A', type: 'real' },
-    { file: 'Research_Data_1Hr_20260519_140940.csv', label: '16A', type: 'real' }
-  ],
-  rd6: [
-    { file: 'Research_Data_1Hr_20260527_111414.csv', label: '8A', type: 'real' },
-    { file: 'Research_Data_1Hr_10A_20260527_122748.csv', label: '10A', type: 'real' },
-    { file: 'Research_Data_1Hr_13A_20260527_133445.csv', label: '13A', type: 'real' },
-    { file: 'Research_Data_1Hr_16A_20260527_143741.csv', label: '16A', type: 'real' }
-  ]
+  home: {
+    mg: [
+      { file: 'Research_Data_Real.csv', label: '8A', type: 'real' },
+      { file: 'Research_Data_1Hr_20260519_114613.csv', label: '10A', type: 'real' },
+      { file: 'Research_Data_1Hr_20260519_130459.csv', label: '13A', type: 'real' },
+      { file: 'Research_Data_1Hr_20260519_140940.csv', label: '16A', type: 'real' }
+    ],
+    rd6: [
+      { file: 'Research_Data_1Hr_20260527_111414.csv', label: '8A', type: 'real' },
+      { file: 'Research_Data_1Hr_10A_20260527_122748.csv', label: '10A', type: 'real' },
+      { file: 'Research_Data_1Hr_13A_20260527_133445.csv', label: '13A', type: 'real' },
+      { file: 'Research_Data_1Hr_16A_20260527_143741.csv', label: '16A', type: 'real' }
+    ]
+  },
+  generator: {
+    mg: [
+      { file: 'Research_Data_1Hr_mg_8A_generator_PLACEHOLDER.csv', label: '8A', type: 'real' },
+      { file: 'Research_Data_1Hr_mg_10A_generator_PLACEHOLDER.csv', label: '10A', type: 'real' },
+      { file: 'Research_Data_1Hr_mg_13A_generator_PLACEHOLDER.csv', label: '13A', type: 'real' },
+      { file: 'Research_Data_1Hr_mg_16A_generator_PLACEHOLDER.csv', label: '16A', type: 'real' }
+    ],
+    rd6: [
+      { file: 'Research_Data_1Hr_rd6_8A_generator_PLACEHOLDER.csv', label: '8A', type: 'real' },
+      { file: 'Research_Data_1Hr_rd6_10A_generator_PLACEHOLDER.csv', label: '10A', type: 'real' },
+      { file: 'Research_Data_1Hr_rd6_13A_generator_PLACEHOLDER.csv', label: '13A', type: 'real' },
+      { file: 'Research_Data_1Hr_rd6_16A_generator_PLACEHOLDER.csv', label: '16A', type: 'real' }
+    ]
+  }
 };
 
 var CAR_NAMES = {
@@ -391,15 +412,25 @@ var CAR_NAMES = {
   rd6: 'RD6 Riddara'
 };
 
-function populateFileSelector(car) {
+function getCurrentFiles() {
+  var source = document.getElementById('sourceSelector').value;
+  var car = document.getElementById('carSelector').value;
+  return CSV_FILES[source][car];
+}
+
+function populateFileSelector() {
   var sel = document.getElementById('fileSelector');
   sel.innerHTML = '';
-  CSV_FILES[car].forEach(function(item) {
+  getCurrentFiles().forEach(function(item) {
     var opt = document.createElement('option');
     opt.value = item.file;
     opt.textContent = item.label;
     sel.appendChild(opt);
   });
+  var car = document.getElementById('carSelector').value;
+  var source = document.getElementById('sourceSelector').value;
+  var sourceLabel = source === 'home' ? 'Household 230V AC' : 'Generator';
+  document.getElementById('headerSubtitle').innerHTML = 'Charging Profile Analysis \u2014 ' + sourceLabel + ' &nbsp;<span class="badge badge-real" id="headerBadge">REAL DATA</span> &nbsp;|&nbsp; <span id="headerSource">Loading...</span>';
   document.getElementById('headerTitle').textContent = 'EV Charging Research Report \u2014 ' + CAR_NAMES[car];
 }
 
@@ -426,7 +457,7 @@ function loadData(fileName) {
   document.getElementById('reportArea').style.display = 'none';
 
   var currentCar = document.getElementById('carSelector').value;
-  var fileInfo = CSV_FILES[currentCar].find(function(f) { return f.file === fileName; });
+  var fileInfo = getCurrentFiles().find(function(f) { return f.file === fileName; });
   var isReal = fileInfo && fileInfo.type === 'real';
 
   var badge = document.getElementById('headerBadge');
@@ -756,8 +787,13 @@ function initAnimations() {
   });
 }
 
+document.getElementById('sourceSelector').addEventListener('change', function() {
+  populateFileSelector();
+  loadData(document.getElementById('fileSelector').value);
+});
+
 document.getElementById('carSelector').addEventListener('change', function() {
-  populateFileSelector(this.value);
+  populateFileSelector();
   loadData(document.getElementById('fileSelector').value);
 });
 
@@ -766,7 +802,7 @@ document.getElementById('fileSelector').addEventListener('change', function() {
 });
 
 window.addEventListener('DOMContentLoaded', function() {
-  populateFileSelector('mg');
+  populateFileSelector();
   loadData(document.getElementById('fileSelector').value);
 });
 </script>
