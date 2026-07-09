@@ -2,7 +2,6 @@ import tinytuya
 import time
 import csv
 import sys
-import os
 import argparse
 import traceback
 import matplotlib
@@ -43,7 +42,7 @@ def c_bold(msg): return f"\033[1m{msg}\033[0m"
 
 def parse_args():
     p = argparse.ArgumentParser(
-        description='EV Charging Data Logger V4.3 (Self-Debug Edition)',
+        description='EV Charging Data Logger V4.4 (Self-Debug Edition)',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 ตัวอย่างการใช้งาน:
@@ -71,7 +70,16 @@ def parse_args():
                    help='รัน pre-flight diagnostic เท่านั้น (ไม่เก็บข้อมูล)')
     p.add_argument('--debug', action='store_true',
                    help='แสดง raw DPS ทุกรอบ (verbose)')
+    p.add_argument('--no-graph', action='store_true',
+                   help='ข้ามการวาดกราฟ (เก็บ CSV อย่างเดียว)')
     return p.parse_args()
+
+
+def _safe_float(val, default=0.0):
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
 
 
 # ============================================================
@@ -157,7 +165,7 @@ def preflight_check(device_id, local_key, ip):
     dps = data['dps']
     print(c_ok("    OK - Connection successful!\n"))
 
-    # --- 5. Dump DPS ทั้งหมด + ตรวจสอบ mapping ---
+    # --- 5. Dump DPS ทั้งหมด ---
     print(c_bold("[5] Raw DPS Dump (ทุกค่าที่อุปกรณ์ส่งกลับ):"))
     print("    " + "-" * 50)
     for key in sorted(dps.keys(), key=lambda x: (len(x), x)):
@@ -168,7 +176,7 @@ def preflight_check(device_id, local_key, ip):
         print(f"    DPS[{key:>4}] = {val_str}")
     print("    " + "-" * 50)
 
-    # --- 6. ตรวจสอบ DPS ที่ใช้ ---
+    # --- 6. ตรวจสอบ DPS mapping ---
     print(c_bold("\n[6] DPS Mapping Check:"))
     checks = [
         ('1',  'Energy (raw)',    True),
@@ -183,9 +191,9 @@ def preflight_check(device_id, local_key, ip):
                 converted = raw / 1000.0
                 print(c_warn(f"    DPS[{dps_key:>2}] {label}: {raw} -> detected mA, converted = {converted} A"))
             elif dps_key == '20':
-                print(c_ok(f"    DPS[{dps_key:>2}] {label}: {raw} -> {raw / 10.0} V"))
+                print(c_ok(f"    DPS[{dps_key:>2}] {label}: {raw} -> {_safe_float(raw, 2300) / 10.0} V"))
             elif dps_key == '1':
-                print(c_ok(f"    DPS[{dps_key:>2}] {label}: {raw} -> {raw / 100.0} kWh"))
+                print(c_ok(f"    DPS[{dps_key:>2}] {label}: {raw} -> {_safe_float(raw) / 100.0} kWh"))
             else:
                 print(c_ok(f"    DPS[{dps_key:>2}] {label}: {raw}"))
         else:
@@ -194,12 +202,12 @@ def preflight_check(device_id, local_key, ip):
 
     # --- 7. คำนวณค่าที่จะใช้ ---
     print(c_bold("\n[7] Computed Values:"))
-    raw_total = dps.get('1', 0) / 100.0
-    current_amp = dps.get('4', 0)
+    raw_total = _safe_float(dps.get('1', 0)) / 100.0
+    current_amp = _safe_float(dps.get('4', 0))
     if current_amp > 100:
         current_amp = current_amp / 1000.0
-    temp = dps.get('24', 0)
-    voltage_v = dps.get('20', 2300) / 10.0 if '20' in dps else 230.0
+    temp = _safe_float(dps.get('24', 0))
+    voltage_v = _safe_float(dps.get('20', 2300)) / 10.0 if '20' in dps else 230.0
     power_kw = (voltage_v * current_amp) / 1000.0
     resistance = round(voltage_v / current_amp, 2) if current_amp > 0 else 0.0
 
@@ -214,11 +222,11 @@ def preflight_check(device_id, local_key, ip):
     print(c_bold("\n[8] Sanity Check:"))
     issues = []
     if not (SANITY_CHECKS['voltage_min'] <= voltage_v <= SANITY_CHECKS['voltage_max']):
-        issues.append(f"Voltage {voltage_v}V ผิดปกติ (ควรอยู่ในช่วง {SANITY_CHECKS['voltage_min']}-{SANITY_CHECKS['voltage_max']}V)")
+        issues.append(f"Voltage {voltage_v}V ผิดปกติ (ควร {SANITY_CHECKS['voltage_min']}-{SANITY_CHECKS['voltage_max']}V)")
     if not (SANITY_CHECKS['current_min'] <= current_amp <= SANITY_CHECKS['current_max']):
-        issues.append(f"Current {current_amp}A ผิดปกติ (ควรอยู่ในช่วง {SANITY_CHECKS['current_min']}-{SANITY_CHECKS['current_max']}A)")
+        issues.append(f"Current {current_amp}A ผิดปกติ (ควร {SANITY_CHECKS['current_min']}-{SANITY_CHECKS['current_max']}A)")
     if not (SANITY_CHECKS['temp_min'] <= temp <= SANITY_CHECKS['temp_max']):
-        issues.append(f"Temp {temp}C ผิดปกติ (ควรอยู่ในช่วง {SANITY_CHECKS['temp_min']}-{SANITY_CHECKS['temp_max']}C)")
+        issues.append(f"Temp {temp}C ผิดปกติ (ควร {SANITY_CHECKS['temp_min']}-{SANITY_CHECKS['temp_max']}C)")
     if power_kw > SANITY_CHECKS['power_max']:
         issues.append(f"Power {power_kw}kW สูงผิดปกติ (ควร < {SANITY_CHECKS['power_max']}kW)")
     if current_amp == 0:
@@ -242,6 +250,24 @@ def preflight_check(device_id, local_key, ip):
     print("=" * 60)
 
     return all_ok
+
+
+# ============================================================
+#  LOGGER (เปิดไฟล์ log ค้างไว้ ไม่เปิด/ปิดทุกรอบ)
+# ============================================================
+class DebugLogger:
+    def __init__(self, filepath):
+        self.file = open(filepath, 'a', encoding='utf-8')
+
+    def log(self, msg, level='INFO'):
+        line = f"[{time.strftime('%H:%M:%S')}] [{level}] {msg}"
+        print(line)
+        self.file.write(line + '\n')
+        self.file.flush()
+
+    def close(self):
+        if self.file and not self.file.closed:
+            self.file.close()
 
 
 # ============================================================
@@ -275,6 +301,7 @@ def main():
     currents = []
     voltages = []
     calculated_energy_kwh = 0.0
+    first_read_done = False
 
     # --- สถิติการทำงาน ---
     stats = {
@@ -287,14 +314,7 @@ def main():
         'first_dps_dumped': False,
     }
 
-    def log(msg, level='INFO'):
-        line = f"[{time.strftime('%H:%M:%S')}] [{level}] {msg}"
-        print(line)
-        try:
-            with open(log_filename, 'a', encoding='utf-8') as lf:
-                lf.write(line + '\n')
-        except Exception:
-            pass
+    logger = DebugLogger(log_filename)
 
     # --- สร้าง device ---
     d = tinytuya.OutletDevice(DEVICE_ID, ip, LOCAL_KEY)
@@ -302,7 +322,7 @@ def main():
     d.set_socketTimeout(5)
 
     print(c_bold(f"\n{'=' * 60}"))
-    print(c_bold(f"  EV Research V4.3 - Self-Debug Edition"))
+    print(c_bold(f"  EV Research V4.4 - Self-Debug Edition"))
     print(c_bold(f"{'=' * 60}"))
     print(f"  Car       : {car_label}")
     print(f"  Current   : {args.amp}A")
@@ -336,7 +356,7 @@ def main():
                 last_loop_time = current_time
 
                 if elapsed_min > limit_minutes:
-                    log(f"Time limit reached ({limit_minutes} min). Stopping.", 'DONE')
+                    logger.log(f"Time limit reached ({limit_minutes} min). Stopping.", 'DONE')
                     break
 
                 stats['total_reads'] += 1
@@ -351,23 +371,28 @@ def main():
                         stats['max_consecutive_errors'],
                         stats['consecutive_errors']
                     )
-                    log(f"Connection error #{stats['error_reads']}: {e}", 'ERROR')
+                    logger.log(f"Connection error #{stats['error_reads']}: {e}", 'ERROR')
 
                     if stats['consecutive_errors'] >= 5:
-                        log("5 consecutive errors! ตรวจสอบ:", 'WARN')
-                        log("  1. คอมและเครื่องชาร์จอยู่ WiFi เดียวกัน?", 'WARN')
-                        log("  2. ปิดแอป Smart Life แล้ว?", 'WARN')
-                        log("  3. IP เปลี่ยน? รัน --check เพื่อสแกนใหม่", 'WARN')
-                        log("  (จะลองต่อไป... ข้อมูลจะไม่หาย)", 'WARN')
+                        logger.log("5 consecutive errors! ตรวจสอบ:", 'WARN')
+                        logger.log("  1. คอมและเครื่องชาร์จอยู่ WiFi เดียวกัน?", 'WARN')
+                        logger.log("  2. ปิดแอป Smart Life แล้ว?", 'WARN')
+                        logger.log("  3. IP เปลี่ยน? รัน --check เพื่อสแกนใหม่", 'WARN')
+                        logger.log("  (จะลองต่อไป... ข้อมูลจะไม่หาย)", 'WARN')
 
-                    data = None
-                    time.sleep(interval)
+                    # backoff: เพิ่ม delay เมื่อ error ติดต่อกัน
+                    backoff = min(stats['consecutive_errors'] * 2, 10)
+                    if backoff > interval:
+                        logger.log(f"Backing off {backoff}s before retry...", 'INFO')
+                        time.sleep(backoff)
+                    else:
+                        time.sleep(interval)
                     continue
 
                 if not data or 'dps' not in data:
                     stats['error_reads'] += 1
                     stats['consecutive_errors'] += 1
-                    log(f"No DPS data (attempt #{stats['error_reads']})", 'WARN')
+                    logger.log(f"No DPS data (attempt #{stats['error_reads']})", 'WARN')
                     time.sleep(interval)
                     continue
 
@@ -376,58 +401,64 @@ def main():
                 stats['success_reads'] += 1
                 dps = data['dps']
 
-                # --- Dump DPS ครั้งแรก ---
+                # --- รอบแรก: reset dt_seconds + dump DPS ---
+                if not first_read_done:
+                    first_read_done = True
+                    # รีเซ็ต dt_seconds รอบแรก ไม่ให้นับเวลาที่ใช้ต่อสื่อสาร
+                    dt_seconds = interval
+                    last_loop_time = time.time()
+
                 if not stats['first_dps_dumped']:
                     stats['first_dps_dumped'] = True
-                    log("First successful DPS dump:", 'INFO')
+                    logger.log("First successful DPS dump:", 'INFO')
                     for k in sorted(dps.keys(), key=lambda x: (len(x), x)):
-                        log(f"  DPS[{k}] = {dps[k]}", 'INFO')
+                        logger.log(f"  DPS[{k}] = {dps[k]}", 'INFO')
 
                 # --- Debug mode: แสดง raw DPS ทุกรอบ ---
                 if args.debug:
-                    log(f"Raw DPS: {dps}", 'DEBUG')
+                    logger.log(f"Raw DPS: {dps}", 'DEBUG')
 
-                # --- อ่านค่า + auto-detect หน่วย ---
-                raw_total = dps.get('1', 0) / 100.0
-                current_amp = dps.get('4', 0)
-                temp = dps.get('24', 0)
-                voltage_v = dps.get('20', 2300) / 10.0 if '20' in dps else 230.0
+                # --- อ่านค่าดิบ (type-safe) ---
+                raw_total = _safe_float(dps.get('1', 0)) / 100.0
+                current_amp = _safe_float(dps.get('4', 0))
+                temp = _safe_float(dps.get('24', 0))
+                voltage_v = _safe_float(dps.get('20', 2300)) / 10.0 if '20' in dps else 230.0
 
                 unit_note = ""
                 if current_amp > 100:
                     unit_note = " (mA->A)"
                     current_amp = current_amp / 1000.0
 
-                # --- ตรวจสอบค่าผิดปกติ ---
-                if voltage_v == 230.0 and '20' not in dps:
-                    msg = f"DPS['20'] (Voltage) หาย! ใช้ค่า default 230V"
+                # --- คำนวณ ---
+                power_kw = (voltage_v * current_amp) / 1000.0
+                resistance = round((voltage_v / current_amp), 2) if current_amp > 0 else 0.0
+                temp_rise = round(temp - (initial_temp if initial_temp is not None else temp), 2)
+
+                if initial_temp is None:
+                    initial_temp = temp
+                    temp_rise = 0.0
+                    logger.log(f"Initial temperature set: {temp}C", 'INFO')
+
+                calculated_energy_kwh += power_kw * (dt_seconds / 3600.0)
+
+                # --- ตรวจสอบค่าผิดปกติ (ใช้ power_kw ที่คำนวณแล้ว ไม่ซ้ำซ้อน) ---
+                if '20' not in dps:
+                    msg = "DPS['20'] (Voltage) หาย! ใช้ค่า default 230V"
                     if msg not in stats['warnings']:
                         stats['warnings'].append(msg)
-                        log(msg, 'WARN')
+                        logger.log(msg, 'WARN')
 
                 if current_amp == 0:
                     msg = "Current = 0A เครื่องชาร์จอาจยังไม่ชาร์จ"
                     if msg not in stats['warnings']:
                         stats['warnings'].append(msg)
-                        log(msg, 'WARN')
+                        logger.log(msg, 'WARN')
 
-                if power_kw_check := (voltage_v * current_amp) / 1000.0:
-                    if power_kw_check > SANITY_CHECKS['power_max']:
-                        msg = f"Power {power_kw_check:.2f}kW สูงผิดปกติ! (V={voltage_v}, A={current_amp})"
-                        if msg not in stats['warnings']:
-                            stats['warnings'].append(msg)
-                            log(msg, 'WARN')
-
-                # --- คำนวณ ---
-                if initial_temp is None:
-                    initial_temp = temp
-                    log(f"Initial temperature set: {temp}C", 'INFO')
-
-                power_kw = (voltage_v * current_amp) / 1000.0
-                resistance = round((voltage_v / current_amp), 2) if current_amp > 0 else 0.0
-                temp_rise = round(temp - initial_temp, 2)
-
-                calculated_energy_kwh += power_kw * (dt_seconds / 3600.0)
+                if power_kw > SANITY_CHECKS['power_max']:
+                    msg = f"Power {power_kw:.2f}kW สูงผิดปกติ! (V={voltage_v}, A={current_amp})"
+                    if msg not in stats['warnings']:
+                        stats['warnings'].append(msg)
+                        logger.log(msg, 'WARN')
 
                 # --- เก็บข้อมูล ---
                 times_min.append(elapsed_min)
@@ -450,9 +481,14 @@ def main():
                 ])
                 file.flush()
 
-                # --- แสดงสถานะ ---
+                # --- แสดงสถานะ + ETA ---
                 err_rate = (stats['error_reads'] / stats['total_reads']) * 100 if stats['total_reads'] > 0 else 0
-                status = f"Progress: {elapsed_min:.1f}/{limit_minutes}m | {voltage_v}V | {current_amp}A{unit_note} | {power_kw:.2f}kW | Temp: {temp}C (+{temp_rise}) | Energy: {calculated_energy_kwh:.3f} kWh"
+                remaining_min = limit_minutes - elapsed_min
+                eta = time.strftime('%H:%M:%S', time.localtime(current_time + remaining_min * 60))
+
+                status = (f"Progress: {elapsed_min:.1f}/{limit_minutes}m (ETA {eta}) | "
+                          f"{voltage_v}V | {current_amp}A{unit_note} | {power_kw:.2f}kW | "
+                          f"Temp: {temp}C (+{temp_rise}) | Energy: {calculated_energy_kwh:.3f} kWh")
                 if stats['error_reads'] > 0:
                     status += f" | ERR: {stats['error_reads']} ({err_rate:.0f}%)"
                 print(status)
@@ -463,55 +499,69 @@ def main():
         #  วาดกราฟ
         # ============================================================
         if not times_min:
-            log("No data collected. Skipping graph.", 'WARN')
+            logger.log("No data collected. Skipping graph.", 'WARN')
             _print_summary(stats, csv_filename, log_filename)
             sys.exit(0)
 
-        print(c_info("\n--- Generating Research Graphs ---"))
+        if args.no_graph:
+            print(c_warn("\n[--no-graph] Skipping graph generation."))
+        else:
+            print(c_info("\n--- Generating Research Graphs ---"))
 
-        step = 10
-        t = times_min[::step]
-        p = powers[::step]
-        tp = temps[::step]
-        e = energies[::step]
-        c = currents[::step]
-        v = voltages[::step]
+            # ปรับ downsample ตามจำนวนข้อมูล
+            n = len(times_min)
+            if n > 600:
+                step = 10
+            elif n > 300:
+                step = 5
+            elif n > 60:
+                step = 2
+            else:
+                step = 1
 
-        fig, (ax1, ax3) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
+            t = times_min[::step]
+            p = powers[::step]
+            tp = temps[::step]
+            e = energies[::step]
+            c = currents[::step]
+            v = voltages[::step]
 
-        color1 = 'tab:blue'
-        ax1.set_ylabel('Power (kW)', color=color1, fontweight='bold')
-        ax1.plot(t, p, color=color1, linewidth=2, label='Power (kW)')
-        ax1.tick_params(axis='y', labelcolor=color1)
-        ax1.grid(True, linestyle=':', alpha=0.6)
+            fig, (ax1, ax3) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
 
-        ax2 = ax1.twinx()
-        color2 = 'tab:red'
-        ax2.set_ylabel('Temperature (C)', color=color2, fontweight='bold')
-        ax2.plot(t, tp, color=color2, linestyle='--', linewidth=2, label='Temperature (C)')
-        ax2.tick_params(axis='y', labelcolor=color2)
-        ax1.set_title(f'{car_label} - {args.amp}A - {args.source}\n'
-                      f'Energy: {energies[-1]:.4f} kWh | Temp Rise: +{max(temps)-initial_temp:.1f}C')
+            color1 = 'tab:blue'
+            ax1.set_ylabel('Power (kW)', color=color1, fontweight='bold')
+            ax1.plot(t, p, color=color1, linewidth=2, label='Power (kW)')
+            ax1.tick_params(axis='y', labelcolor=color1)
+            ax1.grid(True, linestyle=':', alpha=0.6)
 
-        color3 = 'tab:green'
-        ax3.set_xlabel('Time (Minutes)', fontweight='bold')
-        ax3.set_ylabel('Voltage (V)', color=color3, fontweight='bold')
-        ax3.plot(t, v, color=color3, linewidth=2, label='Voltage (V)')
-        ax3.tick_params(axis='y', labelcolor=color3)
-        ax3.grid(True, linestyle=':', alpha=0.6)
+            ax2 = ax1.twinx()
+            color2 = 'tab:red'
+            ax2.set_ylabel('Temperature (C)', color=color2, fontweight='bold')
+            ax2.plot(t, tp, color=color2, linestyle='--', linewidth=2, label='Temperature (C)')
+            ax2.tick_params(axis='y', labelcolor=color2)
+            ax1.set_title(f'{car_label} - {args.amp}A - {args.source}\n'
+                          f'Energy: {energies[-1]:.4f} kWh | Temp Rise: +{max(temps)-initial_temp:.1f}C')
 
-        ax4 = ax3.twinx()
-        color4 = 'tab:purple'
-        ax4.set_ylabel('Current (A)', color=color4, fontweight='bold')
-        ax4.plot(t, c, color=color4, linestyle='-.', linewidth=2, label='Current (A)')
-        ax4.tick_params(axis='y', labelcolor=color4)
+            color3 = 'tab:green'
+            ax3.set_xlabel('Time (Minutes)', fontweight='bold')
+            ax3.set_ylabel('Voltage (V)', color=color3, fontweight='bold')
+            ax3.plot(t, v, color=color3, linewidth=2, label='Voltage (V)')
+            ax3.tick_params(axis='y', labelcolor=color3)
+            ax3.grid(True, linestyle=':', alpha=0.6)
 
-        fig.tight_layout()
-        plt.savefig(graph_filename, dpi=300)
-        print(c_ok(f"Graph saved: {graph_filename}"))
+            ax4 = ax3.twinx()
+            color4 = 'tab:purple'
+            ax4.set_ylabel('Current (A)', color=color4, fontweight='bold')
+            ax4.plot(t, c, color=color4, linestyle='-.', linewidth=2, label='Current (A)')
+            ax4.tick_params(axis='y', labelcolor=color4)
+
+            fig.tight_layout()
+            plt.savefig(graph_filename, dpi=300)
+            print(c_ok(f"Graph saved: {graph_filename}"))
 
         # --- สรุปผล ---
-        _print_summary(stats, csv_filename, log_filename, graph_filename,
+        _print_summary(stats, csv_filename, log_filename,
+                       graph_filename if not args.no_graph else None,
                        times_min, powers, temps, voltages, currents, energies, initial_temp)
 
     except KeyboardInterrupt:
@@ -521,8 +571,11 @@ def main():
     except Exception as e:
         print(c_err(f"\n[!] Unexpected error: {e}"))
         traceback.print_exc()
-        log(f"CRASH: {e}\n{traceback.format_exc()}", 'CRASH')
+        logger.log(f"CRASH: {e}\n{traceback.format_exc()}", 'CRASH')
         _print_summary(stats, csv_filename, log_filename)
+
+    finally:
+        logger.close()
 
 
 def _print_summary(stats, csv_filename, log_filename, graph_filename=None,
