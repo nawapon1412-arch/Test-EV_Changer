@@ -101,9 +101,58 @@
 
   .footer { text-align: center; padding: 20px; color: #555; font-size: 12px; }
 
+  /* ===== Power source comparison ===== */
+  .power-compare { border: 2px solid #00d4ff; }
+  .source-toggle {
+    display: flex; gap: 12px; margin: 18px 0 20px; flex-wrap: wrap;
+  }
+  .toggle-btn {
+    flex: 1; min-width: 150px; padding: 16px 20px;
+    background: #16213e; border: 2px solid #2a2a4a; border-radius: 12px;
+    color: #8892b0; font-size: 16px; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; font-family: inherit;
+  }
+  .toggle-btn:hover { border-color: #00d4ff; color: #ccd6f6; transform: translateY(-2px); }
+  .toggle-btn.active { color: #fff; border-color: #6bcb77; background: linear-gradient(135deg,#0f3460,#16213e); box-shadow: 0 6px 20px rgba(107,203,119,0.25); }
+  .toggle-btn[data-source="gen"].active { border-color: #ff9f43; box-shadow: 0 6px 20px rgba(255,159,67,0.25); }
+  .toggle-btn[data-source="compare"].active { border-color: #00d4ff; box-shadow: 0 6px 20px rgba(0,212,255,0.25); }
+
+  .params-panel {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px; margin-bottom: 22px; padding: 18px;
+    background: #16213e; border-radius: 10px; border: 1px solid #2a2a4a;
+  }
+  .param-item { display: flex; flex-direction: column; gap: 5px; }
+  .param-item label { font-size: 12px; color: #8892b0; }
+  .param-item input {
+    background: #0f0f1a; border: 1px solid #2a2a4a; border-radius: 6px;
+    color: #00d4ff; padding: 9px 10px; font-size: 15px; font-weight: 600; font-family: inherit;
+  }
+  .param-item input:focus { outline: none; border-color: #00d4ff; }
+
+  .verdict-box {
+    border-radius: 12px; padding: 20px 24px; margin-bottom: 22px;
+    text-align: center; border: 2px solid;
+    transition: all 0.3s;
+  }
+  .verdict-box .vlabel { font-size: 12px; color: #8892b0; letter-spacing: 1.5px; text-transform: uppercase; }
+  .verdict-box .vwinner { font-size: 26px; font-weight: 800; margin: 6px 0; }
+  .verdict-box .vdetail { font-size: 14px; color: #ccd6f6; }
+  .verdict-box.win-home { background: linear-gradient(135deg,#16213e,#1a1a2e); border-color: #6bcb77; }
+  .verdict-box.win-home .vwinner { color: #6bcb77; }
+  .verdict-box.win-gen { background: linear-gradient(135deg,#16213e,#1a1a2e); border-color: #ff9f43; }
+  .verdict-box.win-gen .vwinner { color: #ff9f43; }
+
+  .cost-card-home .value { color: #6bcb77; }
+  .cost-card-gen .value { color: #ff9f43; }
+
+  .data-note { font-size: 12px; color: #8892b0; margin-top: 14px; line-height: 1.7; }
+  .data-note code { background: #16213e; padding: 2px 6px; border-radius: 4px; color: #00d4ff; }
+
   @media (max-width: 768px) {
     .chart-row { grid-template-columns: 1fr; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .toggle-btn { min-width: 100%; }
   }
 </style>
 </head>
@@ -149,6 +198,61 @@
         <div class="value">~19,000</div>
         <div class="unit">ค่าที่เก็บได้ทั้งหมด</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ===== เปรียบเทียบแหล่งไฟฟ้า: ไฟบ้าน vs เครื่องปั่นไฟ ===== -->
+  <div class="section power-compare">
+    <h2>&#9889; เปรียบเทียบต้นทุน: ไฟบ้าน vs เครื่องปั่นไฟ</h2>
+    <p style="color:#8892b0; margin-bottom:6px;">
+      ข้อมูลจริงจากการชาร์จ 8A เมื่อวันที่ 17/07/2569 (รถยนต์ไฟฟ้า) &mdash;
+      เลือกแหล่งไฟฟ้าที่ต้องการ แล้วสรุปว่าแบบไหน <strong style="color:#00d4ff;">คุ้มกว่า</strong>
+      (ไฟบ้านอ้างอิงค่า Ft ของการไฟฟ้า ณ ปัจจุบัน)
+    </p>
+
+    <div class="source-toggle">
+      <button class="toggle-btn active" data-source="home">&#127968; ไฟบ้าน</button>
+      <button class="toggle-btn" data-source="gen">&#128267; เครื่องปั่นไฟ</button>
+      <button class="toggle-btn" data-source="compare">&#9878;&#65039; เปรียบเทียบคู่กัน</button>
+    </div>
+
+    <div class="params-panel">
+      <div class="param-item">
+        <label>ค่า Ft (กฟผ.) &mdash; บาท/หน่วย</label>
+        <input type="number" id="ftRate" value="0.00" step="0.01" min="-2" max="2">
+      </div>
+      <div class="param-item">
+        <label>อัตราฐาน 1.5 (ขั้น 151-400)</label>
+        <input type="number" id="baseRate" value="4.2218" step="0.01" min="0">
+      </div>
+      <div class="param-item">
+        <label>VAT (%)</label>
+        <input type="number" id="vatRate" value="7" step="1" min="0">
+      </div>
+      <div class="param-item">
+        <label>สิ้นเปลืองเชื้อเพลิง (ลิตร/kWh)</label>
+        <input type="number" id="genFuel" value="0.7" step="0.05" min="0">
+      </div>
+      <div class="param-item">
+        <label>ราคาเชื้อเพลิง (บาท/ลิตร)</label>
+        <input type="number" id="fuelPrice" value="45" step="1" min="0">
+      </div>
+    </div>
+
+    <div class="stats-grid" id="costCards"></div>
+    <div class="verdict-box" id="verdictBox"></div>
+
+    <div class="chart-row">
+      <div class="chart-wrapper"><canvas id="chartCostCompare"></canvas></div>
+      <div class="chart-wrapper"><canvas id="chartCostTime"></canvas></div>
+    </div>
+
+    <div class="data-note">
+      <strong style="color:#ccd6f6;">วิธีคำนวณ:</strong><br>
+      &bull; <strong>ไฟบ้าน:</strong> <code>พลังงาน &times; (อัตราฐาน + Ft) &times; (1 + VAT/100)</code><br>
+      &bull; <strong>เครื่องปั่นไฟ:</strong> <code>พลังงาน &times; อัตราสิ้นเปลืองเชื้อเพลิง &times; ราคาเชื้อเพลิง</code><br>
+      &bull; ค่า Ft อ้างอิงการไฟฟ้าฝ่ายผลิตแห่งประเทศไทย (กฟผ.) <strong>ปรับทุก 4 เดือน</strong> &mdash; แก้ค่าได้ที่ช่องด้านบนเพื่อใช้ค่า Ft ล่าสุด<br>
+      &bull; พลังงานจริงจากข้อมูลวันที่ 17/07/2569: <strong style="color:#00d4ff;">1.83 kWh</strong> (ชาร์จ 8A ระยะเวลา ~60 นาที)
     </div>
   </div>
 
@@ -483,6 +587,167 @@ document.addEventListener('DOMContentLoaded', function() {
     })
   });
 });
+
+// ===== Power source comparison logic =====
+(function() {
+  // ข้อมูลจริงจากการชาร์จ 8A วันที่ 17/07/2569 (downsampled ~80 จุด)
+  var T = [0.0,0.8,1.6,2.4,3.2,4.0,4.8,5.6,6.4,7.2,8.0,8.8,9.9,10.7,11.4,12.1,12.8,13.6,14.3,15.0,15.7,16.4,17.2,17.9,18.6,19.3,20.1,20.8,21.5,22.2,22.9,23.6,24.4,25.1,25.8,26.5,27.2,28.0,28.7,29.4,30.1,30.9,31.6,32.3,33.0,33.7,34.5,35.2,35.9,36.6,37.3,38.0,38.8,39.5,40.2,40.9,41.6,42.4,43.1,43.8,44.5,45.2,46.0,46.7,47.4,48.1,48.9,49.6,50.3,51.0,51.7,52.5,53.2,53.9,54.6,55.3,56.0,56.8,57.5,58.2,58.9,59.6];
+  var E = [0.0,0.0246,0.0491,0.0736,0.0981,0.1227,0.1473,0.1718,0.1963,0.2209,0.2454,0.27,0.3037,0.3278,0.3499,0.3719,0.394,0.4161,0.4382,0.4602,0.4823,0.5044,0.5265,0.5485,0.5706,0.5927,0.6148,0.6369,0.6589,0.681,0.7031,0.7252,0.7472,0.7693,0.7914,0.8135,0.8355,0.8576,0.8797,0.9018,0.9239,0.9459,0.968,0.9901,1.0122,1.0342,1.0563,1.0784,1.1005,1.1225,1.1446,1.1667,1.1888,1.2109,1.2329,1.255,1.2771,1.2992,1.3212,1.3433,1.3654,1.3875,1.4095,1.4316,1.4537,1.4758,1.4979,1.5199,1.542,1.5641,1.5862,1.6082,1.6303,1.6524,1.6745,1.6965,1.7186,1.7407,1.7628,1.7848,1.8069,1.829];
+
+  var TOTAL_ENERGY = E[E.length - 1];   // 1.829 kWh
+
+  function $id(id){ return document.getElementById(id); }
+  function num(id){ return parseFloat($id(id).value) || 0; }
+
+  function compute() {
+    var ft = num('ftRate'), base = num('baseRate'), vat = num('vatRate')/100;
+    var genFuel = num('genFuel'), fuelPrice = num('fuelPrice');
+    var homeRate = (base + ft) * (1 + vat);
+    var genRate = genFuel * fuelPrice;
+    return {
+      energy: TOTAL_ENERGY,
+      homeRate: homeRate, genRate: genRate,
+      homeCost: TOTAL_ENERGY * homeRate,
+      genCost: TOTAL_ENERGY * genRate,
+      fuelUsed: TOTAL_ENERGY * genFuel,
+      ft: ft, base: base, vat: vat, genFuel: genFuel, fuelPrice: fuelPrice
+    };
+  }
+
+  function fmt(n, d){ d = (d==null?2:d); return n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d}); }
+
+  var currentMode = 'home';
+
+  function renderCards(c) {
+    var cards = '';
+    if (currentMode === 'home') {
+      cards =
+        card('พลังงานรวม', fmt(c.energy,3), 'kWh (8A &times; 60 นาที)') +
+        card('อัตราไฟบ้าน (รวม)', fmt(c.homeRate,3), 'ฐาน '+fmt(c.base,4)+' + Ft '+fmt(c.ft,2)+' + VAT', 'cost-card-home') +
+        card('ต้นทุน ไฟบ้าน', fmt(c.homeCost), 'บาท', 'cost-card-home') +
+        card('เทียบ เครื่องปั่นไฟ', fmt(c.genCost), 'บาท (แพงกว่า '+fmt((c.genCost/c.homeCost-1)*100)+'%)', 'cost-card-gen');
+    } else if (currentMode === 'gen') {
+      cards =
+        card('พลังงานรวม', fmt(c.energy,3), 'kWh (8A &times; 60 นาที)') +
+        card('อัตราเครื่องปั่นไฟ', fmt(c.genRate,1), fmt(c.genFuel)+' ลิตร/kWh &times; '+fmt(c.fuelPrice)+' บาท', 'cost-card-gen') +
+        card('ต้นทุน เครื่องปั่นไฟ', fmt(c.genCost), 'บาท', 'cost-card-gen') +
+        card('เชื้อเพลิงที่ใช้', fmt(c.fuelUsed,2), 'ลิตร');
+    } else {
+      cards =
+        card('พลังงานรวม', fmt(c.energy,3), 'kWh (8A &times; 60 นาที)') +
+        card('ต้นทุน ไฟบ้าน', fmt(c.homeCost), '@ '+fmt(c.homeRate,2)+' บาท/kWh', 'cost-card-home') +
+        card('ต้นทุน เครื่องปั่นไฟ', fmt(c.genCost), '@ '+fmt(c.genRate,1)+' บาท/kWh', 'cost-card-gen') +
+        card('ประหยัดได้', fmt(Math.abs(c.genCost-c.homeCost)), 'บาท ('+fmt(Math.abs(c.genCost/c.homeCost-1)*100)+'%)');
+    }
+    $id('costCards').innerHTML = cards;
+  }
+
+  function card(label, value, unit, cls) {
+    return '<div class="stat-card '+(cls||'')+'">' +
+      '<div class="label">'+label+'</div>' +
+      '<div class="value">'+value+'</div>' +
+      '<div class="unit">'+unit+'</div></div>';
+  }
+
+  function renderVerdict(c) {
+    var box = $id('verdictBox');
+    if (currentMode !== 'compare') { box.style.display = 'none'; return; }
+    var homeCheaper = c.homeCost < c.genCost;
+    var winner = homeCheaper ? 'ไฟบ้าน' : 'เครื่องปั่นไฟ';
+    var diff = Math.abs(c.genCost - c.homeCost);
+    var pct = (diff / Math.max(c.homeCost, c.genCost)) * 100;
+    box.style.display = 'block';
+    box.className = 'verdict-box ' + (homeCheaper ? 'win-home' : 'win-gen');
+    box.innerHTML =
+      '<div class="vlabel">ข้อสรุป &mdash; แบบไหนคุ้มกว่า</div>' +
+      '<div class="vwinner">&#127942; "'+winner+'" ถูกกว่า</div>' +
+      '<div class="vdetail">ชาร์จ '+fmt(c.energy,3)+' kWh &nbsp;|&nbsp; '+
+      'ไฟบ้าน <b style="color:#6bcb77">'+fmt(c.homeCost)+' บาท</b> &nbsp;vs&nbsp; '+
+      'เครื่องปั่นไฟ <b style="color:#ff9f43">'+fmt(c.genCost)+' บาท</b> &nbsp;|&nbsp; '+
+      'ประหยัด <b>'+fmt(diff)+' บาท ('+fmt(pct)+'%)</b></div>';
+  }
+
+  // ---- charts ----
+  var chartBar = null, chartLine = null;
+
+  Chart.defaults.color = '#8892b0';
+  Chart.defaults.borderColor = '#2a2a4a';
+  var baseOpts = {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    animation: { duration: 900, easing: 'easeOutQuart' },
+    plugins: {
+      legend: { labels: { color: '#ccd6f6', padding: 12 } },
+      tooltip: { backgroundColor: '#1a1a2e', titleColor: '#00d4ff', bodyColor: '#ccd6f6', borderColor: '#2a2a4a', borderWidth: 1, padding: 10 }
+    }
+  };
+
+  function buildCharts(c) {
+    var homeSeries = E.map(function(e){ return e * c.homeRate; });
+    var genSeries  = E.map(function(e){ return e * c.genRate; });
+
+    if (chartBar) chartBar.destroy();
+    if (chartLine) chartLine.destroy();
+
+    var barDatasets = [];
+    if (currentMode === 'home' || currentMode === 'compare') {
+      barDatasets.push({ label: 'ไฟบ้าน (บาท)', data: [c.homeCost], backgroundColor: 'rgba(107,203,119,0.65)', borderColor: '#6bcb77', borderWidth: 2, borderRadius: 8 });
+    }
+    if (currentMode === 'gen' || currentMode === 'compare') {
+      barDatasets.push({ label: 'เครื่องปั่นไฟ (บาท)', data: [c.genCost], backgroundColor: 'rgba(255,159,67,0.65)', borderColor: '#ff9f43', borderWidth: 2, borderRadius: 8 });
+    }
+    chartBar = new Chart($id('chartCostCompare'), {
+      type: 'bar',
+      data: { labels: ['ต้นทุนรวม ('+fmt(c.energy,2)+' kWh)'], datasets: barDatasets },
+      options: Object.assign({}, baseOpts, {
+        plugins: Object.assign({}, baseOpts.plugins, { title: { display: true, text: 'ต้นทุนรวมการชาร์จ (บาท)', color: '#ccd6f6', font: { size: 14 } } }),
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'บาท (THB)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }, x: { ticks: { color: '#8892b0' } } }
+      })
+    });
+
+    var lineDatasets = [];
+    if (currentMode === 'home' || currentMode === 'compare') {
+      lineDatasets.push({ label: 'ไฟบ้าน (บาท)', data: homeSeries, borderColor: '#6bcb77', backgroundColor: 'rgba(107,203,119,0.12)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 });
+    }
+    if (currentMode === 'gen' || currentMode === 'compare') {
+      lineDatasets.push({ label: 'เครื่องปั่นไฟ (บาท)', data: genSeries, borderColor: '#ff9f43', backgroundColor: 'rgba(255,159,67,0.12)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 });
+    }
+    chartLine = new Chart($id('chartCostTime'), {
+      type: 'line',
+      data: { labels: T, datasets: lineDatasets },
+      options: Object.assign({}, baseOpts, {
+        plugins: Object.assign({}, baseOpts.plugins, { title: { display: true, text: 'ต้นทุนสะสมตามเวลา', color: '#ccd6f6', font: { size: 14 } } }),
+        scales: {
+          x: { title: { display: true, text: 'เวลา (นาที)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } },
+          y: { title: { display: true, text: 'ต้นทุนสะสม (บาท)', color: '#8892b0' }, ticks: { color: '#8892b0' }, grid: { color: '#1e1e3a' } }
+        }
+      })
+    });
+  }
+
+  function update() {
+    var c = compute();
+    renderCards(c);
+    renderVerdict(c);
+    buildCharts(c);
+  }
+
+  // toggle
+  document.querySelectorAll('.toggle-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.toggle-btn').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      currentMode = btn.getAttribute('data-source');
+      update();
+    });
+  });
+  // param changes
+  ['ftRate','baseRate','vatRate','genFuel','fuelPrice'].forEach(function(id){
+    $id(id).addEventListener('input', update);
+  });
+
+  update();
+})();
 </script>
 
 </body>
