@@ -217,17 +217,17 @@
 <div class="container">
 
   <div class="file-selector-wrapper">
-    <label>Power Source:</label>
+    <label>เลือกแหล่งจ่ายไฟ:</label>
     <select id="sourceSelector">
-      <option value="home">Home (230V AC)</option>
-      <option value="generator">Generator</option>
+      <option value="home">ไฟบ้าน (230V AC)</option>
+      <option value="generator">เครื่องปั่นไฟ</option>
     </select>
-    <label>Select Car:</label>
+    <label>เลือกรถ:</label>
     <select id="carSelector">
       <option value="mg">MG ZS EV</option>
       <option value="rd6">RD6 Riddara</option>
     </select>
-    <label>Select Data File:</label>
+    <label>เลือกกระแสชาร์จ:</label>
     <select id="fileSelector">
     </select>
   </div>
@@ -393,16 +393,16 @@ var CSV_FILES = {
   },
   generator: {
     mg: [
-      { file: 'Research_Data_1Hr_mg_8A_generator_PLACEHOLDER.csv', label: '8A', type: 'real' },
-      { file: 'Research_Data_1Hr_mg_10A_generator_PLACEHOLDER.csv', label: '10A', type: 'real' },
-      { file: 'Research_Data_1Hr_mg_13A_generator_PLACEHOLDER.csv', label: '13A', type: 'real' },
-      { file: 'Research_Data_1Hr_mg_16A_generator_PLACEHOLDER.csv', label: '16A', type: 'real' }
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_mg_8A.csv', label: '8A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_mg_10A.csv', label: '10A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_mg_13A.csv', label: '13A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_mg_16A.csv', label: '16A', type: 'real' }
     ],
     rd6: [
-      { file: 'Research_Data_1Hr_rd6_8A_generator_PLACEHOLDER.csv', label: '8A', type: 'real' },
-      { file: 'Research_Data_1Hr_rd6_10A_generator_PLACEHOLDER.csv', label: '10A', type: 'real' },
-      { file: 'Research_Data_1Hr_rd6_13A_generator_PLACEHOLDER.csv', label: '13A', type: 'real' },
-      { file: 'Research_Data_1Hr_rd6_16A_generator_PLACEHOLDER.csv', label: '16A', type: 'real' }
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_rd6_8A.csv', label: '8A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_rd6_10A.csv', label: '10A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_rd6_13A.csv', label: '13A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_rd6_16A.csv', label: '16A', type: 'real' }
     ]
   }
 };
@@ -429,7 +429,7 @@ function populateFileSelector() {
   });
   var car = document.getElementById('carSelector').value;
   var source = document.getElementById('sourceSelector').value;
-  var sourceLabel = source === 'home' ? 'Household 230V AC' : 'Generator';
+  var sourceLabel = source === 'home' ? 'ไฟบ้าน (Household 230V AC)' : 'เครื่องปั่นไฟ (Generator)';
   document.getElementById('headerSubtitle').innerHTML = 'Charging Profile Analysis \u2014 ' + sourceLabel + ' &nbsp;<span class="badge badge-real" id="headerBadge">REAL DATA</span> &nbsp;|&nbsp; <span id="headerSource">Loading...</span>';
   document.getElementById('headerTitle').textContent = 'EV Charging Research Report \u2014 ' + CAR_NAMES[car];
 }
@@ -463,7 +463,7 @@ function loadData(fileName) {
   var badge = document.getElementById('headerBadge');
   badge.textContent = isReal ? 'REAL DATA' : 'MOCK DATA';
   badge.className = 'badge ' + (isReal ? 'badge-real' : 'badge-mock');
-  document.getElementById('headerSource').textContent = 'Source: ' + fileName;
+  document.getElementById('headerSource').textContent = 'แหล่งข้อมูล: ' + (document.getElementById('sourceSelector').value === 'home' ? 'ไฟบ้าน' : 'เครื่องปั่นไฟ') + ' | ' + fileInfo.label;
 
   fetch(fileName)
     .then(function(res) {
@@ -538,7 +538,7 @@ function loadData(fileName) {
     })
     .catch(function(err) {
       document.getElementById('loadingArea').innerHTML =
-        '<div style="color:#ff6b6b;font-size:16px;">Error: ' + err.message + '</div>';
+        '<div style="color:#ff6b6b;font-size:16px;">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '<br><small style="color:#8892b0">ลองรีเฟรชหน้าเว็บ หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</small></div>';
     });
 }
 
