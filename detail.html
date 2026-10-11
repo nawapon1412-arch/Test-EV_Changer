@@ -217,12 +217,17 @@
 <div class="container">
 
   <div class="file-selector-wrapper">
-    <label>Select Car:</label>
+    <label>เลือกแหล่งจ่ายไฟ:</label>
+    <select id="sourceSelector">
+      <option value="home">ไฟบ้าน (230V AC)</option>
+      <option value="generator">เครื่องปั่นไฟ</option>
+    </select>
+    <label>เลือกรถ:</label>
     <select id="carSelector">
       <option value="mg">MG ZS EV</option>
       <option value="rd6">RD6 Riddara</option>
     </select>
-    <label>Select Data File:</label>
+    <label>เลือกกระแสชาร์จ:</label>
     <select id="fileSelector">
     </select>
   </div>
@@ -372,18 +377,34 @@
 var charts = {};
 
 var CSV_FILES = {
-  mg: [
-    { file: 'Research_Data_Real.csv', label: '8A', type: 'real' },
-    { file: 'Research_Data_1Hr_20260519_114613.csv', label: '10A', type: 'real' },
-    { file: 'Research_Data_1Hr_20260519_130459.csv', label: '13A', type: 'real' },
-    { file: 'Research_Data_1Hr_20260519_140940.csv', label: '16A', type: 'real' }
-  ],
-  rd6: [
-    { file: 'Research_Data_1Hr_20260527_111414.csv', label: '8A', type: 'real' },
-    { file: 'Research_Data_1Hr_10A_20260527_122748.csv', label: '10A', type: 'real' },
-    { file: 'Research_Data_1Hr_13A_20260527_133445.csv', label: '13A', type: 'real' },
-    { file: 'Research_Data_1Hr_16A_20260527_143741.csv', label: '16A', type: 'real' }
-  ]
+  home: {
+    mg: [
+      { file: 'Research_Data_Real.csv', label: '8A', type: 'real' },
+      { file: 'Research_Data_1Hr_20260519_114613.csv', label: '10A', type: 'real' },
+      { file: 'Research_Data_1Hr_20260519_130459.csv', label: '13A', type: 'real' },
+      { file: 'Research_Data_1Hr_20260519_140940.csv', label: '16A', type: 'real' }
+    ],
+    rd6: [
+      { file: 'Research_Data_1Hr_20260527_111414.csv', label: '8A', type: 'real' },
+      { file: 'Research_Data_1Hr_10A_20260527_122748.csv', label: '10A', type: 'real' },
+      { file: 'Research_Data_1Hr_13A_20260527_133445.csv', label: '13A', type: 'real' },
+      { file: 'Research_Data_1Hr_16A_20260527_143741.csv', label: '16A', type: 'real' }
+    ]
+  },
+  generator: {
+    mg: [
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_mg_8A.csv', label: '8A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_mg_10A.csv', label: '10A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_mg_13A.csv', label: '13A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_mg_16A.csv', label: '16A', type: 'real' }
+    ],
+    rd6: [
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_rd6_8A.csv', label: '8A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_rd6_10A.csv', label: '10A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_rd6_13A.csv', label: '13A', type: 'real' },
+      { file: 'https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/data/gen_rd6_16A.csv', label: '16A', type: 'real' }
+    ]
+  }
 };
 
 var CAR_NAMES = {
@@ -391,15 +412,25 @@ var CAR_NAMES = {
   rd6: 'RD6 Riddara'
 };
 
-function populateFileSelector(car) {
+function getCurrentFiles() {
+  var source = document.getElementById('sourceSelector').value;
+  var car = document.getElementById('carSelector').value;
+  return CSV_FILES[source][car];
+}
+
+function populateFileSelector() {
   var sel = document.getElementById('fileSelector');
   sel.innerHTML = '';
-  CSV_FILES[car].forEach(function(item) {
+  getCurrentFiles().forEach(function(item) {
     var opt = document.createElement('option');
     opt.value = item.file;
     opt.textContent = item.label;
     sel.appendChild(opt);
   });
+  var car = document.getElementById('carSelector').value;
+  var source = document.getElementById('sourceSelector').value;
+  var sourceLabel = source === 'home' ? 'ไฟบ้าน (Household 230V AC)' : 'เครื่องปั่นไฟ (Generator)';
+  document.getElementById('headerSubtitle').innerHTML = 'Charging Profile Analysis \u2014 ' + sourceLabel + ' &nbsp;<span class="badge badge-real" id="headerBadge">REAL DATA</span> &nbsp;|&nbsp; <span id="headerSource">Loading...</span>';
   document.getElementById('headerTitle').textContent = 'EV Charging Research Report \u2014 ' + CAR_NAMES[car];
 }
 
@@ -426,13 +457,13 @@ function loadData(fileName) {
   document.getElementById('reportArea').style.display = 'none';
 
   var currentCar = document.getElementById('carSelector').value;
-  var fileInfo = CSV_FILES[currentCar].find(function(f) { return f.file === fileName; });
+  var fileInfo = getCurrentFiles().find(function(f) { return f.file === fileName; });
   var isReal = fileInfo && fileInfo.type === 'real';
 
   var badge = document.getElementById('headerBadge');
   badge.textContent = isReal ? 'REAL DATA' : 'MOCK DATA';
   badge.className = 'badge ' + (isReal ? 'badge-real' : 'badge-mock');
-  document.getElementById('headerSource').textContent = 'Source: ' + fileName;
+  document.getElementById('headerSource').textContent = 'แหล่งข้อมูล: ' + (document.getElementById('sourceSelector').value === 'home' ? 'ไฟบ้าน' : 'เครื่องปั่นไฟ') + ' | ' + fileInfo.label;
 
   fetch(fileName)
     .then(function(res) {
@@ -507,7 +538,7 @@ function loadData(fileName) {
     })
     .catch(function(err) {
       document.getElementById('loadingArea').innerHTML =
-        '<div style="color:#ff6b6b;font-size:16px;">Error: ' + err.message + '</div>';
+        '<div style="color:#ff6b6b;font-size:16px;">โหลดข้อมูลไม่สำเร็จ: ' + err.message + '<br><small style="color:#8892b0">ลองรีเฟรชหน้าเว็บ หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ต</small></div>';
     });
 }
 
@@ -756,8 +787,13 @@ function initAnimations() {
   });
 }
 
+document.getElementById('sourceSelector').addEventListener('change', function() {
+  populateFileSelector();
+  loadData(document.getElementById('fileSelector').value);
+});
+
 document.getElementById('carSelector').addEventListener('change', function() {
-  populateFileSelector(this.value);
+  populateFileSelector();
   loadData(document.getElementById('fileSelector').value);
 });
 
@@ -766,7 +802,7 @@ document.getElementById('fileSelector').addEventListener('change', function() {
 });
 
 window.addEventListener('DOMContentLoaded', function() {
-  populateFileSelector('mg');
+  populateFileSelector();
   loadData(document.getElementById('fileSelector').value);
 });
 </script>
