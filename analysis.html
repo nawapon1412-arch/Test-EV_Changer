@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>วิเคราะห์ผลการทดลอง — เครื่องปั่นไฟฉุกเฉิน EV (MG ZS EV + RD6)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',Tahoma,sans-serif; background:#0d1117; color:#e6edf3; line-height:1.7; }
+  .container { max-width:1200px; margin:0 auto; padding:30px 20px; }
+  header { text-align:center; padding:50px 20px 30px; background:linear-gradient(135deg,#0d1117 60%,#161b22); border-bottom:1px solid #21262d; }
+  header h1 { font-size:2em; background:linear-gradient(90deg,#4d96ff,#ff6b6b); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  header p { color:#8b949e; margin-top:10px; }
+  .badge { display:inline-block; margin:6px 4px; padding:5px 16px; border-radius:20px; font-size:0.85em; font-weight:600; }
+  .b-mg { background:rgba(77,150,255,0.15); color:#4d96ff; border:1px solid #4d96ff; }
+  .b-rd { background:rgba(255,107,107,0.15); color:#ff6b6b; border:1px solid #ff6b6b; }
+  .section { margin:35px 0; }
+  .section h2 { font-size:1.45em; color:#58a6ff; border-left:4px solid #58a6ff; padding-left:14px; margin-bottom:8px; }
+  .desc { color:#8b949e; font-size:0.95em; margin-bottom:18px; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:22px; }
+  .stat-card { background:#161b22; border:1px solid #21262d; border-radius:12px; padding:18px; text-align:center; }
+  .stat-value { font-size:1.7em; font-weight:800; }
+  .stat-label { color:#8b949e; font-size:0.85em; margin-top:4px; }
+  .stat-sub { color:#6e7681; font-size:0.78em; margin-top:2px; }
+  .chart-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(420px,1fr)); gap:18px; }
+  .chart-card { background:#161b22; border:1px solid #21262d; border-radius:12px; padding:14px; }
+  .chart-card img { width:100%; border-radius:8px; cursor:zoom-in; }
+  .chart-card img:hover { opacity:0.85; }
+  .chart-full { background:#161b22; border:1px solid #21262d; border-radius:12px; padding:14px; margin:14px 0; }
+  .chart-full img { width:100%; border-radius:8px; cursor:zoom-in; }
+  .chart-full img:hover { opacity:0.85; }
+  .caption { text-align:center; color:#8b949e; font-size:0.88em; margin-top:10px; }
+  .car-tag { display:inline-block; padding:2px 12px; border-radius:6px; font-size:0.8em; font-weight:700; margin-right:8px; }
+  .t-mg { background:rgba(77,150,255,0.2); color:#4d96ff; }
+  .t-rd { background:rgba(255,107,107,0.2); color:#ff6b6b; }
+  table { width:100%; border-collapse:collapse; background:#161b22; border-radius:12px; overflow:hidden; margin:16px 0; font-size:0.92em; }
+  th { background:#21262d; padding:12px 8px; color:#58a6ff; }
+  td { padding:10px 8px; text-align:center; border-bottom:1px solid #21262d; }
+  tr:hover { background:#1c2128; }
+  .blue { color:#4d96ff; font-weight:700; } .red { color:#ff6b6b; font-weight:700; }
+  .green { color:#3fb950; font-weight:700; } .orange { color:#d29922; font-weight:700; }
+  .findings { background:linear-gradient(135deg,#161b22,#1c2128); border:1px solid #21262d; border-radius:12px; padding:24px; }
+  .findings li { margin:12px 0; padding-left:8px; }
+  footer { text-align:center; color:#6e7681; padding:40px 20px; font-size:0.85em; border-top:1px solid #21262d; margin-top:40px; }
+  .system { background:#161b22; border:1px solid #21262d; border-radius:12px; padding:20px; text-align:center; margin:20px 0; }
+  .system .flow { font-size:1.05em; margin:10px 0; }
+  .arrow { color:#58a6ff; font-weight:800; }
+  /* CSS bar chart */
+  .csschart { background:#161b22; border:1px solid #21262d; border-radius:12px; padding:20px 24px; margin:14px 0; }
+  .cchart-title { font-size:1.25em; font-weight:800; margin-bottom:14px; }
+  .brow { display:grid; grid-template-columns:52px 1fr; gap:4px 14px; align-items:center; margin:10px 0; }
+  .blabel { font-weight:800; font-size:1.05em; color:#e6edf3; }
+  .btrack { display:flex; align-items:center; gap:8px; }
+  .bname { width:96px; font-size:0.82em; color:#8b949e; text-align:right; flex-shrink:0; }
+  .bar { height:30px; border-radius:6px; display:flex; align-items:center; padding-left:10px; min-width:58px; }
+  .bar span { font-weight:800; font-size:0.95em; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.4); }
+  /* lightbox */
+  .lb { position:fixed; inset:0; background:rgba(0,0,0,0.92); display:none; z-index:99; cursor:zoom-out; }
+  .lb img { max-width:96vw; max-height:94vh; margin:3vh auto; display:block; border-radius:8px; }
+  .lb-open { display:block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⚡ เครื่องปั่นไฟฉุกเฉินจากแบตเตอรี่ 72V สำหรับรถยนต์ไฟฟ้า</h1>
+  <p>ผลการทดลอง วิเคราะห์ และเปรียบเทียบ — ทดสอบจริงกับรถ 2 คัน</p>
+  <span class="badge b-mg">🚗 MG ZS EV (แบต 50.3 kWh)</span>
+  <span class="badge b-rd">🛻 RD6 (แบต 63 kWh)</span>
+  <div style="margin-top:14px">
+    <a href="index.html" style="display:inline-block; padding:8px 20px; border-radius:8px; border:1px solid #58a6ff; background:rgba(88,166,255,0.12); color:#58a6ff; font-size:0.92em; text-decoration:none; font-weight:600; transition:all 0.2s;" onmouseover="this.style.background='rgba(88,166,255,0.3)'" onmouseout="this.style.background='rgba(88,166,255,0.12)'">← กลับหน้าผลการทดลอง</a>
+  </div>
+</header>
+
+<div class="container">
+
+<div class="system">
+  <div style="color:#8b949e; font-size:0.9em;">ระบบทดลอง</div>
+  <div class="flow">
+    แบต 72V 100Ah (7.2 kWh) <span class="arrow">→</span> มอเตอร์ FW15-7000 (η 91%) <span class="arrow">→</span> AC Generator (η 85%) <span class="arrow">→</span> หัวชาร์จรถ (η 68–78%)
+  </div>
+  <div style="color:#d29922; font-weight:700;">ประสิทธิภาพระบบรวม 53–60% | ทดลองที่ 8A / 10A / 13A / 16A นาน 1 ชม. ต่อกรณี</div>
+</div>
+
+<!-- ================= สถิติหลัก ================= -->
+<div class="section">
+  <h2>📊 ตัวเลขสำคัญ (เครื่องปั่นไฟ, 16A)</h2>
+  <div class="stats">
+    <div class="stat-card"><div class="stat-value" style="color:#4d96ff">3.61 kW</div>
+<div class="stat-label">กำลังไฟ MG</div><div class="stat-sub">RD6 3.55 kW</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#3fb950">2.46 kWh</div>
+<div class="stat-label">พลังงานรถได้ MG</div><div class="stat-sub">RD6 2.42 kWh</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#58a6ff">+4.9%</div>
+<div class="stat-label">SOC รถเพิ่ม MG</div><div class="stat-sub">RD6 +3.8%</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#d29922">35%</div>
+<div class="stat-label">แบตเครื่องปั่นเหลือ</div><div class="stat-sub">RD6 36%</div></div>
+    <div class="stat-card"><div class="stat-value" style="color:#ff6b6b">~2.7 เท่า</div>
+<div class="stat-label">น้ำมันแพงกว่าแบต</div><div class="stat-sub">ประหยัด 18.8–36.8 บ./ชม.</div></div>
+  </div>
+</div>
+
+<!-- ================= 1. กำลังไฟ (HTML/CSS ล้วน คมชัดทุกจอ) ================= -->
+<div class="section">
+  <h2>1. กำลังไฟฟ้า — ไฟบ้าน vs เครื่องปั่นไฟ (ทั้งสองคัน)</h2>
+  <p class="desc">เขียว = ไฟบ้าน | แดง = เครื่องปั่นไฟ (หน่วย kW)</p>
+  <div class="csschart">
+    <div class="cchart-title" style="color:#4d96ff">🚗 MG ZS EV</div>
+    <div class="brow">
+      <div class="blabel">8A</div>
+      <div class="btrack">
+        <div class="bname" style="color:#3fb950">ไฟบ้าน</div>
+        <div class="bar" style="width:40%; background:#3fb950"><span>1.84</span></div>
+      </div>
+      <div class="btrack">
+        <div class="bname" style="color:#ff6b6b">เครื่องปั่นไฟ</div>
+        <div class="bar" style="width:40%; background:#ff6b6b"><span>1.85</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">10A</div>
+      <div class="btrack">
+        <div class="bname" style="color:#3fb950">ไฟบ้าน</div>
+        <div class="bar" style="width:50%; background:#3fb950"><span>2.30</span></div>
+      </div>
+      <div class="btrack">
+        <div class="bname" style="color:#ff6b6b">เครื่องปั่นไฟ</div>
+        <div class="bar" style="width:50%; background:#ff6b6b"><span>2.30</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">13A</div>
+      <div class="btrack">
+        <div class="bname" style="color:#3fb950">ไฟบ้าน</div>
+        <div class="bar" style="width:65%; background:#3fb950"><span>2.99</span></div>
+      </div>
+      <div class="btrack">
+        <div class="bname" style="color:#ff6b6b">เครื่องปั่นไฟ</div>
+        <div class="bar" style="width:64%; background:#ff6b6b"><span>2.96</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">16A</div>
+      <div class="btrack">
+        <div class="bname" style="color:#3fb950">ไฟบ้าน</div>
+        <div class="bar" style="width:80%; background:#3fb950"><span>3.68</span></div>
+      </div>
+      <div class="btrack">
+        <div class="bname" style="color:#ff6b6b">เครื่องปั่นไฟ</div>
+        <div class="bar" style="width:79%; background:#ff6b6b"><span>3.61</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="csschart">
+    <div class="cchart-title" style="color:#ff6b6b">🛻 RD6</div>
+    <div class="brow">
+      <div class="blabel">8A</div>
+      <div class="btrack">
+        <div class="bname" style="color:#3fb950">ไฟบ้าน</div>
+        <div class="bar" style="width:40%; background:#3fb950"><span>1.84</span></div>
+      </div>
+      <div class="btrack">
+        <div class="bname" style="color:#ff6b6b">เครื่องปั่นไฟ</div>
+        <div class="bar" style="width:40%; background:#ff6b6b"><span>1.82</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">10A</div>
+      <div class="btrack">
+        <div class="bname" style="color:#3fb950">ไฟบ้าน</div>
+        <div class="bar" style="width:50%; background:#3fb950"><span>2.30</span></div>
+      </div>
+      <div class="btrack">
+        <div class="bname" style="color:#ff6b6b">เครื่องปั่นไฟ</div>
+        <div class="bar" style="width:49%; background:#ff6b6b"><span>2.27</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">13A</div>
+      <div class="btrack">
+        <div class="bname" style="color:#3fb950">ไฟบ้าน</div>
+        <div class="bar" style="width:65%; background:#3fb950"><span>2.99</span></div>
+      </div>
+      <div class="btrack">
+        <div class="bname" style="color:#ff6b6b">เครื่องปั่นไฟ</div>
+        <div class="bar" style="width:63%; background:#ff6b6b"><span>2.92</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">16A</div>
+      <div class="btrack">
+        <div class="bname" style="color:#3fb950">ไฟบ้าน</div>
+        <div class="bar" style="width:80%; background:#3fb950"><span>3.68</span></div>
+      </div>
+      <div class="btrack">
+        <div class="bname" style="color:#ff6b6b">เครื่องปั่นไฟ</div>
+        <div class="bar" style="width:77%; background:#ff6b6b"><span>3.55</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">เครื่องปั่นไฟจ่ายกำลังได้ใกล้เคียงไฟบ้านทุกกระแส (ต่างกัน &lt;2%)</p>
+</div>
+
+<!-- ================= 2. SOC (CSS bars) ================= -->
+<div class="section">
+  <h2>2. SOC รถที่เพิ่มขึ้นใน 1 ชม.</h2>
+  <p class="desc">SOC = แบตรถเพิ่มขึ้นกี่ % หลังชาร์จ 1 ชม. จากเครื่องปั่นไฟ</p>
+  <div class="csschart">
+    <div class="cchart-title" style="color:#4d96ff">🚗 MG ZS EV <span style="font-size:0.65em;color:#8b949e;font-weight:400">(แบตรถ 50.3 kWh)</span></div>
+    <div class="brow">
+      <div class="blabel">8A</div>
+      <div class="btrack">
+        <div class="bname">SOC เพิ่ม</div>
+        <div class="bar" style="width:46%; background:#4d96ff"><span>+2.9%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">10A</div>
+      <div class="btrack">
+        <div class="bname">SOC เพิ่ม</div>
+        <div class="bar" style="width:55%; background:#4d96ff"><span>+3.4%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">13A</div>
+      <div class="btrack">
+        <div class="bname">SOC เพิ่ม</div>
+        <div class="bar" style="width:67%; background:#4d96ff"><span>+4.2%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">16A</div>
+      <div class="btrack">
+        <div class="bname">SOC เพิ่ม</div>
+        <div class="bar" style="width:79%; background:#4d96ff"><span>+4.9%</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="csschart">
+    <div class="cchart-title" style="color:#ff6b6b">🛻 RD6 <span style="font-size:0.65em;color:#8b949e;font-weight:400">(แบตรถ 63 kWh)</span></div>
+    <div class="brow">
+      <div class="blabel">8A</div>
+      <div class="btrack">
+        <div class="bname">SOC เพิ่ม</div>
+        <div class="bar" style="width:36%; background:#ff6b6b"><span>+2.3%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">10A</div>
+      <div class="btrack">
+        <div class="bname">SOC เพิ่ม</div>
+        <div class="bar" style="width:44%; background:#ff6b6b"><span>+2.7%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">13A</div>
+      <div class="btrack">
+        <div class="bname">SOC เพิ่ม</div>
+        <div class="bar" style="width:53%; background:#ff6b6b"><span>+3.3%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">16A</div>
+      <div class="btrack">
+        <div class="bname">SOC เพิ่ม</div>
+        <div class="bar" style="width:62%; background:#ff6b6b"><span>+3.8%</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">MG เพิ่มมากกว่า RD6 เพราะแบตเล็กกว่า — พลังงานเท่ากันแต่เทลงถังเล็กกว่า</p>
+</div>
+
+<!-- ================= 3. แบตเหลือ (CSS bars) ================= -->
+<div class="section">
+  <h2>3. แบตเครื่องปั่นไฟ 7.2 kWh เหลือกี่ %</h2>
+  <p class="desc">เริ่ม 100% → ชาร์จยิ่งแรง หมดยิ่งเร็ว | ต่ำกว่า 40% (สีแดง) ใกล้โซนต้องชาร์จแบตคืน</p>
+  <div class="csschart">
+    <div class="cchart-title" style="color:#4d96ff">🚗 MG ZS EV</div>
+    <div class="brow">
+      <div class="blabel">8A</div>
+      <div class="btrack">
+        <div class="bname">เหลือ</div>
+        <div class="bar" style="width:57%; background:#4d96ff"><span>67%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">10A</div>
+      <div class="btrack">
+        <div class="bname">เหลือ</div>
+        <div class="bar" style="width:51%; background:#4d96ff"><span>59%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">13A</div>
+      <div class="btrack">
+        <div class="bname">เหลือ</div>
+        <div class="bar" style="width:40%; background:#4d96ff"><span>47%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">16A</div>
+      <div class="btrack">
+        <div class="bname">เหลือ</div>
+        <div class="bar" style="width:30%; background:#ff6b6b"><span>35%</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="csschart">
+    <div class="cchart-title" style="color:#ff6b6b">🛻 RD6</div>
+    <div class="brow">
+      <div class="blabel">8A</div>
+      <div class="btrack">
+        <div class="bname">เหลือ</div>
+        <div class="bar" style="width:58%; background:#ff6b6b"><span>67%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">10A</div>
+      <div class="btrack">
+        <div class="bname">เหลือ</div>
+        <div class="bar" style="width:51%; background:#ff6b6b"><span>59%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">13A</div>
+      <div class="btrack">
+        <div class="bname">เหลือ</div>
+        <div class="bar" style="width:41%; background:#ff6b6b"><span>48%</span></div>
+      </div>
+    </div>
+    <div class="brow">
+      <div class="blabel">16A</div>
+      <div class="btrack">
+        <div class="bname">เหลือ</div>
+        <div class="bar" style="width:31%; background:#ff6b6b"><span>36%</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="caption">16A ใช้ 1 ชม. แบตเหลือแค่ ~35% ทั้งสองคัน</p>
+</div>
+
+<!-- ================= 4. อุณหภูมิ ================= -->
+<div class="section">
+  <h2>4. อุณหภูมิระหว่างชาร์จ (ทั้งสองคัน)</h2>
+  <p class="desc">Tuya meter ความละเอียด 1°C | RD6 ร้อนกว่า MG ~1°C ทุกกระแส</p>
+  <div class="chart-full">
+    <img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_16_temp.png" alt="Temp both cars">
+    <div class="caption">อุณหภูมิขึ้นจาก 25°C → 27–33°C ตามกระแส</div>
+  </div>
+</div>
+
+<!-- ================= 5. การสิ้นเปลือง ================= -->
+<div class="section">
+  <h2>5. Loss พลังงานทั้งระบบ</h2>
+  <p class="desc">แบต → มอเตอร์ (−9%) → เครื่องปั่นไฟ (−15%) → charger (−22–32%)</p>
+  <div class="chart-row">
+    <div class="chart-card"><img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_05_flow.png" alt="Flow"><div class="caption">การไหลพลังงาน MG 16A</div></div>
+    <div class="chart-card"><img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_06_loss.png" alt="Loss"><div class="caption">Loss แบ่งตามขั้นตอน</div></div>
+    <div class="chart-card"><img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_07_pie.png" alt="Pie"><div class="caption">8A (η=60%) vs 16A (η=53%)</div></div>
+    <div class="chart-card"><img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_03_batt_drain.png" alt="Batt"><div class="caption">SOC แบตลดตามเวลา</div></div>
+  </div>
+</div>
+
+<!-- ================= 6. ต้นทุน ================= -->
+<div class="section">
+  <h2>6. ต้นทุนค่าไฟ (ทั้งสองคัน)</h2>
+  <p class="desc">อัตราไฟฟ้า 4.5 บาท/kWh | เครื่องปั่นไฟแพงกว่าเพราะเสีย Loss ที่มอเตอร์+เครื่องปั่นไฟ</p>
+  <div class="chart-row">
+    <div class="chart-card"><img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_09_cost.png" alt="Cost"><div class="caption">ไฟบ้าน vs เครื่องปั่นไฟ</div></div>
+    <div class="chart-card"><img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_10_cost_all.png" alt="Cost all"><div class="caption">ทุกกรณี เรียงแพง→ถูก</div></div>
+  </div>
+</div>
+
+<!-- ================= 7. น้ำมัน ================= -->
+<div class="section">
+  <h2>7. ⛽ เทียบกับเครื่องปั่นไฟน้ำมัน (ครบทั้งสองคัน)</h2>
+  <p class="desc">
+    สมมติฐาน: เครื่องปั่นไฟเบนซิน 5 kW | กินน้ำมัน 0.4 ลิตร/kWh | น้ำมัน 40 บาท/ลิตร<br>
+    <strong style="color:#ff6b6b;">น้ำมันแพงกว่าแบต ~2.7 เท่า ทั้งสองคัน!</strong>
+  </p>
+  <div class="chart-row">
+    <div class="chart-card">
+      <span class="car-tag t-mg">MG ZS EV</span>
+      <img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_17_oil_mg.png" alt="Oil MG">
+      <div class="caption">MG: น้ำมัน 29.5–57.8 บาท/ชม.</div>
+    </div>
+    <div class="chart-card">
+      <span class="car-tag t-rd">RD6</span>
+      <img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_18_oil_rd6.png" alt="Oil RD6">
+      <div class="caption">RD6: น้ำมัน 29.2–56.8 บาท/ชม.</div>
+    </div>
+    <div class="chart-card"><img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_19_oil_both.png" alt="Oil both"><div class="caption">6 แหล่งเทียบกัน — ต้นทุนสองคันใกล้เคียง &lt;3%</div></div>
+    <div class="chart-card"><img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_20_fuel_liters.png" alt="Fuel liters"><div class="caption">น้ำมันที่กิน: 0.73–1.45 ลิตร/ชม.</div></div>
+  </div>
+  <div class="chart-full">
+    <img src="https://raw.githubusercontent.com/nawapon1412-arch/EV-Experiment-Results/main/img/web_12_oil_table.png" alt="Oil table">
+    <div class="caption">ตารางคำนวณ: ลิตร = E_AC × 0.4 | บาท = ลิตร × 40</div>
+  </div>
+</div>
+
+<!-- ================= ตารางเปรียบเทียบ ================= -->
+<div class="section">
+  <h2>📋 ตารางเปรียบเทียบ MG ZS EV vs RD6 (เครื่องปั่นไฟ)</h2>
+  <table>
+    <tr><th rowspan="2">กระแส</th><th colspan="3" style="color:#4d96ff">MG ZS EV (50.3 kWh)</th><th colspan="3" style="color:#ff6b6b">RD6 (63 kWh)</th></tr>
+    <tr><th>กำลังไฟ (kW)</th><th>SOC รถ+</th><th>แบตเหลือ</th><th>กำลังไฟ (kW)</th><th>SOC รถ+</th><th>แบตเหลือ</th></tr>
+    <tr><td><strong>8A</strong></td>
+    <td class="blue">1.85</td><td class="blue">+2.9%</td><td class="blue">67%</td>
+    <td class="red">1.82</td><td class="red">+2.3%</td><td class="red">67%</td></tr>
+    <tr><td><strong>10A</strong></td>
+    <td class="blue">2.30</td><td class="blue">+3.4%</td><td class="blue">59%</td>
+    <td class="red">2.27</td><td class="red">+2.7%</td><td class="red">59%</td></tr>
+    <tr><td><strong>13A</strong></td>
+    <td class="blue">2.96</td><td class="blue">+4.2%</td><td class="blue">47%</td>
+    <td class="red">2.92</td><td class="red">+3.3%</td><td class="red">48%</td></tr>
+    <tr><td><strong>16A</strong></td>
+    <td class="blue">3.61</td><td class="blue">+4.9%</td><td class="blue">35%</td>
+    <td class="red">3.55</td><td class="red">+3.8%</td><td class="red">36%</td></tr>
+  </table>
+</div>
+
+<!-- ================= ข้อค้นพบ ================= -->
+<div class="section">
+  <h2>💡 ข้อค้นพบสำคัญ</h2>
+  <div class="findings">
+    <ul style="padding-left:22px">
+      <li><strong>สองคันรับไฟใกล้กัน:</strong> กำลังไฟ 16A — MG 3.61 kW vs RD6 3.55 kW (ต่างกัน &lt;2%) เครื่องปั่นไฟเดียวใช้ได้ทั้งคู่</li>
+      <li><strong>แต่ SOC เพิ่มต่างกัน:</strong> 1 ชม. 16A — MG +4.9% vs RD6 +3.8% เพราะแบต RD6 ใหญ่กว่า (63 vs 50.3 kWh)</li>
+      <li><strong>Loss ทั้งระบบ 40–47%:</strong> η รวม 53–60% — กระแสยิ่งสูง Loss ยิ่งมาก (charger 8A η=78% → 16A η=68%)</li>
+      <li><strong>แบต 7.2 kWh หมดเร็ว:</strong> 16A ใช้ 1 ชม. เหลือ ~35% — ต้องชาร์จแบตคืนก่อนโซนอันตราย 20%</li>
+      <li><strong>ต้นทุนเครื่องปั่นไฟแบต:</strong> แพงกว่าไฟบ้าน 2.4–4.7 บาท/ชม. แต่ <span class="red">ถูกกว่าน้ำมัน ~2.7 เท่า</span> (ประหยัด 18.8–36.8 บาท/ชม.)</li>
+      <li><strong>เหมาะใช้ฉุกเฉิน:</strong> ชาร์จ 1 ชม. ได้ SOC ~3–5% พอขับไปสถานีชาร์จใกล้สุด ไม่ได้ใช้แทนสถานีชาร์จโหมดเร็ว</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  โครงงาน การศึกษาเครื่องปั่นไฟฉุกเฉินที่ใช้แบตเตอรี่สำหรับรถยนต์ไฟฟ้า<br>
+  ทดสอบจริง MG ZS EV + RD6 • กระแส 8/10/13/16A • นาน 1 ชม. ต่อกรณี<br>
+  <span style="color:#484f58">v3-css</span>
+</footer>
+
+</div>
+
+<div class="lb" id="lightbox" onclick="this.classList.remove('lb-open')"><img id="lb-img" src=""></div>
+<script>
+document.querySelectorAll('.chart-card img, .chart-full img').forEach(function(im){
+  im.addEventListener('click', function(){
+    var lb=document.getElementById('lightbox');
+    document.getElementById('lb-img').src=im.src;
+    lb.classList.add('lb-open');
+  });
+});
+</script>
+
+</body>
+</html>
